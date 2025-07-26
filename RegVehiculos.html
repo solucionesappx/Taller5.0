@@ -280,7 +280,7 @@
             };          
             console.log("Contenido completo del objeto JSON enviado:", vehicleData);
             
-            fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, { method: 'POST', body: JSON.stringify(vehicleData) });
+            fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, { method: 'POST', body: JSON.stringify(vehicleData) })
                 .then(response => response.json())
                 .then(responseData => {
                 console.log('Success:', responseData);
