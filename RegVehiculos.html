@@ -298,7 +298,7 @@
                         <p class="text-gray-700 mt-2">${responseData.message || 'No se pudo completar el registro del vehículo. Inténtalo de nuevo.'}</p>
                     `, 'error');
                 }
-            }) .catch (error) {
+            }) catch (error) {
                 console.error('Error!', error.message);
                 showResult(`
                     <h3 class="text-xl font-bold text-red-700 mb-2">Error en la Conexión</h3>
