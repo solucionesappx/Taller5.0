@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Nuevo Usuario</title>
+    <title>Registrar Nuevo Cliente</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +26,7 @@
 
     <div class="w-full max-w-lg mx-auto">
         <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-gray-100">
-            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">Registrar Nuevo Usuario</h1>
+            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">Registrar Nuevo Cliente</h1>
             <p class="text-center text-gray-500 mb-8 max-w-sm mx-auto">Completa el formulario para crear una nueva cuenta.</p>
 
             <!-- Navigation Buttons -->
@@ -107,7 +107,7 @@
     <script>
         // --- CONFIGURACIÓN --- ref DRIVE App Registro Datos Taller (script)      
         // ¡IMPORTANTE! Reemplaza esta URL con la URL de tu Google Apps Script Web App desplegada.
-       const scriptURL = 'https://script.google.com/macros/s/AKfycbxdsFH6vUuDO7oe4WwL-b4KcvCcfomByJ5r9PbUwDFKdmXIAmSxeNw2OALMFXDV8wRs1Q/exec'; // Asegúrate de que esta URL sea la correcta
+       const scriptURL = 'https://script.google.com/macros/s/AKfycbwUT_e-uMz-SToHyES_tDokqYpwt2Mgp1-nDzddxivfU0CCnSNbhMKEdvPuafaBIQLD/exec'; // Asegúrate de que esta URL sea la correcta
 
         // Elementos del DOM del formulario de registro
         const newUserForm = document.getElementById('newUserForm');
@@ -125,7 +125,7 @@
         function generateUUID() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789';
             let result = '';
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 8; i++) { // Genera un ID de 8 caracteres
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             return result;
@@ -154,67 +154,83 @@
         }
 
         // Manejador del formulario de registro
-        newUserForm.addEventListener('submit', e => {
+        newUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitButton = newUserForm.querySelector('button[type="submit"]');
-            setLoading(submitButton, 'Registrando...');
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-75', 'cursor-not-allowed');
+            submitButton.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Registrando...`;
 
             const formData = new FormData(newUserForm);
             const formDataObj = Object.fromEntries(formData.entries());
 
-            formDataObj.clave = generateRandomPassword();
-            formDataObj.cliente_id = generateUUID();
-            formDataObj.productos_seleccionados_carrito = JSON.stringify([]); // Siempre vacío en esta página
-            formDataObj.cliente_data_reg = formatDateTime(new Date()); // Añadir fecha y hora de registro para Historia
-            formDataObj.cliente_treg = formatDateTime(new Date()); // Añadir fecha y hora de registro para Clientes
+            // Aquí se añade la lógica para los campos que no vienen directamente del formulario
+            formDataObj.action = 'registerUser'; // Asegúrate de que la acción sea correcta para tu script
+            formDataObj.clave = generateRandomPassword(); // La contraseña se genera automáticamente
+            formDataObj.cliente_id = generateUUID(); // El ID de cliente se genera automáticamente
+            formDataObj.productos_seleccionados_carrito = JSON.stringify([]); // No aplica para registro de cliente
+            formDataObj.cliente_treg = formatDateTime(new Date()); // Fecha y hora de registro del cliente
+            formDataObj.cliente_status = 'Activo'; // Estado por defecto del cliente
+            // Actualizar el origen de los datos según la App.
+            formDataObj.cliente_tienda = 'X6_Taller'; // Añadir el campo 'cliente_tienda'
 
             console.log("Contenido completo del objeto JSON enviado:", formDataObj);
 
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify(formDataObj) })
-                .then(response => response.json())
-                .then(responseData => {
-                    console.log('Success:', responseData);
-                    if (responseData.status === 'success') {
-                        // Guardar el nuevo usuario en sessionStorage
-                        const newUser = {
-                            Cliente_ID: formDataObj.cliente_id,
-                            Cliente_Nombre: formDataObj.nombre,
-                            Cliente_Clave: formDataObj.clave, // La clave generada
-                            Cliente_Perfil: 'Client', // Por defecto, es un cliente
-                            Cliente_Data_Reg: formDataObj.cliente_data_reg // Guardar la fecha/hora formateada
-                        };
-                        sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
-                        showRegistrationSuccessModal(formDataObj, formDataObj.cliente_id);
-                    } else {
-                        showResult(`
-                            <h3 class="text-xl font-bold text-red-700 mb-2">Error en el Registro</h3>
-                            <p class="text-gray-700 mt-2">${responseData.message || 'No se pudo completar el registro. Inténtalo de nuevo.'}</p>
-                        `, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error!', error.message);
-                    showResult(`
-                        <h3 class="text-xl font-bold text-red-700 mb-2">Error en la Conexión</h3>
-                        <p class="text-gray-700 mt-2">Ocurrió un problema al conectar con el servidor. Inténtalo de nuevo más tarde o contacta soporte.</p>
-                    `, 'error');
-                })
-                .finally(() => {
-                    resetButton(submitButton, 'Registrarme');
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(formDataObj)
                 });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Guardar el nuevo usuario en sessionStorage (si es necesario para el flujo posterior)
+                    const newUser = {
+                        Cliente_ID: formDataObj.cliente_id,
+                        Cliente_Nombre: formDataObj.nombre,
+                        Cliente_Clave: formDataObj.clave, // La clave generada
+                        Cliente_Perfil: 'Client', // Por defecto, es un cliente
+                        Cliente_Data_Reg: formDataObj.cliente_treg // Usar la fecha/hora formateada
+                    };
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
+
+                    showRegistrationSuccessModal(formDataObj, formDataObj.cliente_id);
+                } else {
+                    showResult(`
+                        <h3 class="text-xl font-bold text-red-700 mb-2">Error en el Registro</h3>
+                        <p class="text-gray-700 mt-2">${data.message || 'No se pudo completar el registro. Inténtalo de nuevo.'}</p>
+                    `, 'error');
+                }
+            } catch (error) {
+                console.error('Error al registrar:', error);
+                showResult(`
+                    <h3 class="text-xl font-bold text-red-700 mb-2">Error en la Conexión</h3>
+                    <p class="text-gray-700 mt-2">Ocurrió un problema al conectar con el servidor. Inténtalo de nuevo más tarde o contacta soporte.</p>
+                `, 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-75', 'cursor-not-allowed');
+                submitButton.innerHTML = 'Registrarme';
+            }
         });
 
         // Función para mostrar el modal de registro con los datos
         function showRegistrationSuccessModal(formData, clienteId) {
-            showMessageModal('¡Registro Exitoso!', 'Tus datos han sido guardados correctamente:', 'success');
+            const modalTitleElement = document.getElementById('modal-title');
+            const modalMessageElement = document.getElementById('modal-message');
+
+            if (modalTitleElement) modalTitleElement.textContent = '¡Registro Exitoso!';
+            if (modalMessageElement) modalMessageElement.textContent = 'Tus datos han sido guardados correctamente:';
+
             modalContentDetails.innerHTML = `
                 <p class="text-sm"><strong>Nombre:</strong> ${formData.nombre}</p>
-                <p class="text-sm"><strong>Correo:</strong> ${formData.correo}</p>
-                <p class="text-sm"><strong>Teléfono:</strong> ${formData.telefono}</p>
+                <p class="text-sm"><strong>Correo:</strong> ${formData.correo || 'N/A'}</p>
+                <p class="text-sm"><strong>Teléfono:</strong> ${formData.telefono || 'N/A'}</p>
                 <p class="text-sm"><strong>Cédula Identidad:</strong> ${formData.cliente_idx || 'N/A'}</p>
                 <p class="text-sm"><strong>Clave:</strong> ${formData.clave}</p>
                 <p class="text-sm"><strong>ID Cliente:</strong> ${clienteId}</p>
                 <p class="text-sm"><strong>Fecha Registro:</strong> ${formData.cliente_treg}</p>
+                <p class="text-sm"><strong>Tienda:</strong> ${formData.cliente_tienda}</p>
             `;
             registrationModal.classList.remove('hidden');
             setTimeout(() => {
@@ -230,7 +246,7 @@
                 newUserForm.reset();
                 resultContainer.innerHTML = '';
                 resultContainer.className = 'mt-8 text-center p-4 rounded-xl transition-all duration-300 ease-in-out';
-                window.location.href = 'catalog.html'; // Redirigir al catálogo después de aceptar
+                window.location.href = 'index.html'; // Redirigir al login después de aceptar
             }, 300);
         }
 
@@ -256,6 +272,10 @@
                 resultContainer.classList.add('bg-red-100', 'border-red-300', 'text-red-800', 'shadow-md');
                 resultContainer.classList.remove('bg-green-100', 'border-green-300', 'text-green-800');
             }
+            resultContainer.classList.remove('hidden'); // Asegura que el contenedor de resultados sea visible
+            setTimeout(() => {
+                resultContainer.classList.add('hidden'); // Lo oculta después de un tiempo
+            }, 3000); // Duración del mensaje
         }
 
         function showMessageModal(title, message, type) {
