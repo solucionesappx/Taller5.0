@@ -280,14 +280,11 @@
             };
 
             console.log("Contenido completo del objeto JSON enviado:", vehicleData);
-
-            try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(vehicleData)
-                });
-                const responseData = await response.json();
-
+            fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, { method: 'POST', body: JSON.stringify(vehicleData) });
+            
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify(formDataObj) })
+                .then(response => response.json())
+                .then(responseData => {
                 console.log('Success:', responseData);
                 if (responseData.status === 'success') {
                     showVehicleRegistrationSuccessModal(vehicleData);
