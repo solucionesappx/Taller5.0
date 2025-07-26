@@ -106,7 +106,7 @@
 
     <script>
         // --- CONFIGURACIÓN --- ref DRIVE App registro DatosVehiculo Taller (script)
-        // ¡IMPORTANTE! Reemplaza esta URL con la URL de tu Google Apps Script Web App desplegada.
+        // ¡IMPORTANTE! Reemplaza esta URL con la URL de tu Google Apps Script Web App desplegada para el registro de vehículos.
         const GOOGLE_APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzV0eHhsZLgOLJ2iIUU_LQHXy8nWGfq-LTfdvlOpURPHpScnACLp53XLOLLKRxzt1zQ8w/exec'; // Asegúrate de que esta URL sea la correcta
 
         // Elementos del DOM
@@ -269,7 +269,6 @@
             loggedInUser = JSON.parse(userString);
 
             const vehicleData = {
-                action: 'registerVehicle', // Indicar la acción al script de Apps Script
                 Vehiculo_ID: generateShortUUID(),
                 Cliente_ID: loggedInUser.Cliente_ID,
                 Vehiculo_Marca: marca,
@@ -280,33 +279,36 @@
             };          
             console.log("Contenido completo del objeto JSON enviado:", vehicleData);
             
+            // Corregido: Encadenamiento correcto de promesas
             fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, { method: 'POST', body: JSON.stringify(vehicleData) })
                 .then(response => response.json())
                 .then(responseData => {
                     console.log('Success:', responseData);
-                if (responseData.status === 'success') {
-                    // Guardar el nuevo vehículo
-                    showVehicleRegistrationSuccessModal(vehicleData);
-                    // Limpiar formulario
-                    vehiculoMarcaInput.value = '';
-                    vehiculoModeloInput.value = '';
-                    vehiculoAnioInput.value = '';
-                    vehiculoPlacaInput.value = '';
-                } else {
+                    if (responseData.status === 'success') {
+                        // Guardar el nuevo vehículo
+                        showVehicleRegistrationSuccessModal(vehicleData);
+                        // Limpiar formulario
+                        vehiculoMarcaInput.value = '';
+                        vehiculoModeloInput.value = '';
+                        vehiculoAnioInput.value = '';
+                        vehiculoPlacaInput.value = '';
+                    } else {
+                        showResult(`
+                            <h3 class="text-xl font-bold text-red-700 mb-2">Error al Registrar Vehículo</h3>
+                            <p class="text-gray-700 mt-2">${responseData.message || 'No se pudo completar el registro del vehículo. Inténtalo de nuevo.'}</p>
+                        `, 'error');
+                    }
+                }) // Aquí termina el .then() correctamente
+                .catch(error => { // El .catch() ahora se aplica a la promesa anterior
+                    console.error('Error!', error.message);
                     showResult(`
-                        <h3 class="text-xl font-bold text-red-700 mb-2">Error al Registrar Vehículo</h3>
-                        <p class="text-gray-700 mt-2">${responseData.message || 'No se pudo completar el registro del vehículo. Inténtalo de nuevo.'}</p>
+                        <h3 class="text-xl font-bold text-red-700 mb-2">Error en la Conexión</h3>
+                        <p class="text-gray-700 mt-2">Ocurrió un problema al conectar con el servidor. Inténtalo de nuevo más tarde o contacta soporte.</p>
                     `, 'error');
-                }
-            }) catch (error) {
-                console.error('Error!', error.message);
-                showResult(`
-                    <h3 class="text-xl font-bold text-red-700 mb-2">Error en la Conexión</h3>
-                    <p class="text-gray-700 mt-2">Ocurrió un problema al conectar con el servidor. Inténtalo de nuevo más tarde o contacta soporte.</p>
-                `, 'error');
-            } finally {
-                resetButton(submitButton, 'Registrar Vehículo');
-            }
+                })
+                .finally(() => { // El .finally() ahora se aplica a la cadena de promesas
+                    resetButton(submitButton, 'Registrar Vehículo');
+                });
         });
 
         // Función para manejar el clic en el botón "Aceptar" del modal de registro de vehículo
