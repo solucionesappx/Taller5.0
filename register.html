@@ -181,7 +181,7 @@
                             Cliente_Clave: formDataObj.clave, // La clave generada
                             Cliente_Perfil: 'Client', // Por defecto, es un cliente
                             Cliente_Data_Reg: formDataObj.cliente_data_reg, // Guardar la fecha/hora formateada
-                            Cliente_tienda = 'X6_Taller' // Añadir el campo 'cliente_tienda'
+                            Cliente_tienda = 'X6_Taller' // Añadir el campo Cliente_Tienda
                         };
                         sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
                         showRegistrationSuccessModal(formDataObj, formDataObj.cliente_id);
