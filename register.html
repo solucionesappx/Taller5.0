@@ -26,7 +26,7 @@
 
     <div class="w-full max-w-lg mx-auto">
         <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-gray-100">
-            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">Registrar Nuevo UsuarioX</h1>
+            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">Registrar Nuevo Usuario</h1>
             <p class="text-center text-gray-500 mb-8 max-w-sm mx-auto">Completa el formulario para crear una nueva cuenta.</p>
 
             <!-- Navigation Buttons -->
@@ -205,30 +205,54 @@
                 });
         });
 
-        // Función para mostrar el modal de registro con los datos LN   <p class="text-sm"><strong>Clave:</strong> ${formData.clave}</p> 
+        // Función para mostrar el modal de registro con los datos
         function showRegistrationSuccessModal(formData, clienteId) {
-            showMessageModal('¡Registro Exitoso!', 'Tus datos han sido guardados correctamente:', 'success');
+            const modalTitleElement = document.getElementById('modal-title');
+            const modalMessageElement = document.getElementById('modal-message');
+
+            if (modalTitleElement) modalTitleElement.textContent = '¡Registro Exitoso!';
+            if (modalMessageElement) modalMessageElement.textContent = 'Tus datos han sido guardados correctamente:';
+
             modalContentDetails.innerHTML = `
                 <p class="text-sm"><strong>Nombre:</strong> ${formData.nombre}</p>
-                <p class="text-sm"><strong>Correo:</strong> ${formData.correo}</p>
-                <p class="text-sm"><strong>Teléfono:</strong> ${formData.telefono}</p>
+                <p class="text-sm"><strong>Correo:</strong> ${formData.correo || 'N/A'}</p>
+                <p class="text-sm"><strong>Teléfono:</strong> ${formData.telefono || 'N/A'}</p>
                 <p class="text-sm"><strong>Cédula Identidad:</strong> ${formData.cliente_idx || 'N/A'}</p>
                 <div class="relative flex items-center w-full">
-                        <p class="text-sm font-bold mr-2">Clave:</p>
-                        <input type="text" value="${formData.clave}" readonly class="flex-grow shadow appearance-none border rounded-lg py-1.5 px-2 text-gray-700 bg-gray-100 cursor-text" id="modal-password-display">
-                        <span id="copy-password-icon" class="absolute right-2 cursor-pointer text-gray-500 hover:text-gray-700">
+                    <p class="text-sm font-bold mr-2">Clave:</p>
+                    <input type="text" value="${formData.clave}" readonly class="flex-grow shadow appearance-none border rounded-lg py-1.5 px-2 text-gray-700 bg-gray-100 cursor-text" id="modal-password-display">
+                    <span id="copy-password-icon" class="absolute right-2 cursor-pointer text-gray-500 hover:text-gray-700">
                         <!-- Icono SVG de doble hoja para copiar -->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125H9.375a1.125 1.125 0 01-1.125-1.125V17.25m12 0H12.75m11.25 0h-3.75M4.5 12.75V12a3 3 0 013-3h2.25c.621 0 1.125.504 1.125 1.125v.75m-6.75 0l-1.545 1.545M4.5 18.75h-2.25c-.621 0-1.125-.504-1.125-1.125V5.625c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v1.875m-4.5 0l-1.545 1.545" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125H9.375a1.125 1.125 0 01-1.125-1.125V17.25m12 0H12.75m11.25 0h-3.75M4.5 12.75V12a3 3 0 013-3h2.25c.621 0 1.125.504 1.125 1.125v.75m-6.75 0l-1.545 1.545M4.5 18.75h-2.25c-.621 0-1.125-.504-1.125-1.125V5.625c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v1.875m-4.5 0l-1.545 1.545" />
                         </svg>
                     </span>
-                </div>                
+                </div>
                 <p class="text-sm"><strong>ID Cliente:</strong> ${clienteId}</p>
                 <p class="text-sm"><strong>Fecha Registro:</strong> ${formData.cliente_treg}</p>
+                <p class="text-sm"><strong>Tienda:</strong> ${formData.cliente_tienda}</p>
             `;
             registrationModal.classList.remove('hidden');
             setTimeout(() => {
                 registrationModal.querySelector('.modal-content').classList.add('show');
+
+                // Añadir event listener al icono de copiar después de que el modal se muestre
+                const copyPasswordIcon = document.getElementById('copy-password-icon');
+                if (copyPasswordIcon) {
+                    copyPasswordIcon.addEventListener('click', () => {
+                        const passwordField = document.getElementById('modal-password-display');
+                        if (passwordField) {
+                            passwordField.select(); // Selecciona el texto del campo
+                            document.execCommand('copy'); // Copia el texto seleccionado
+                            // Opcional: Mostrar un mensaje de confirmación temporal
+                            const originalIconHtml = copyPasswordIcon.innerHTML;
+                            copyPasswordIcon.innerHTML = `<span class="text-green-500">¡Copiado!</span>`;
+                            setTimeout(() => {
+                                copyPasswordIcon.innerHTML = originalIconHtml;
+                            }, 1500);
+                        }
+                    });
+                }
             }, 10);
         }
 
