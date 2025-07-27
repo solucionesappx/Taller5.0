@@ -210,6 +210,7 @@
         const messageContainer = document.getElementById('message-container');
         const forgotPasswordLink = document.getElementById('forgot-password-link');
         const showRegisterFormBtn = document.getElementById('show-register-form-btn');
+        const togglePassword = document.getElementById('toggle-password'); // Nuevo: Icono para mostrar/ocultar contraseña
 
         // Elementos del Modal de Recuperación
         const recoveryModal = document.getElementById('recovery-modal');
@@ -445,10 +446,31 @@
             recoveryMessageContainer.classList.add('hidden');
         });
 
-
         // Navegación al formulario de registro
         showRegisterFormBtn.addEventListener('click', () => {
             window.location.href = './register.html';
+        });
+        
+        // Lógica para mostrar/ocultar contraseña
+        togglePassword.addEventListener('click', () => {
+            const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            loginPasswordInput.setAttribute('type', type);
+
+            // Cambiar el icono
+            if (type === 'password') {
+                togglePassword.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                `;
+            } else {
+                togglePassword.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.988 5.844A1.352 1.352 0 003 6.35c0 .487.33 1.17.644 1.745 1.405 2.81 4.287 4.857 7.55 4.857 1.037 0 2.05-.173 2.99-.483m0 0l-1.545 1.545m1.545-1.545L21 18.275m-8.73-3.008l-1.545 1.545m1.545-1.545L12 12m-3.172 1.828l-1.545 1.545m1.545-1.545L3.988 5.844zM12 12a3 3 0 100-6 3 3 0 000 6z" />
+                    </svg>
+                `;
+            }
         });
     </script>
 </body>
