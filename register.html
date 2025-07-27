@@ -242,14 +242,14 @@
                     copyPasswordIcon.addEventListener('click', () => {
                         const passwordField = document.getElementById('modal-password-display');
                         if (passwordField) {
-                            passwordField.select(); // Selecciona el texto del campo
+                            // passwordField.select(); // Selecciona el texto del campo
                             document.execCommand('copy'); // Copia el texto seleccionado
                             // Opcional: Mostrar un mensaje de confirmación temporal
                             const originalIconHtml = copyPasswordIcon.innerHTML;
                             copyPasswordIcon.innerHTML = `<span class="text-green-500">¡Copiado!</span>`;
                             setTimeout(() => {
                                 copyPasswordIcon.innerHTML = originalIconHtml;
-                            }, 1500);
+                            }, 500);
                         }
                     });
                 }
