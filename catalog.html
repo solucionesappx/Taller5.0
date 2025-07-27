@@ -632,38 +632,17 @@
                 renderCartTable();
             });
 
-            // Event Listeners
-            productTypeSelect.addEventListener('change', populateFlavors);
-            addToCartButton.addEventListener('click', addProductToCart);
-            generatePdfButton.addEventListener('click', generateOrderPdf);
-            
-            // Modificado: Al hacer clic en "Regresar al Menú", muestra el modal de confirmación
-            backToMenuButton.addEventListener('click', () => { // ID cambiado
-                confirmExitModal.classList.remove('hidden');
-                setTimeout(() => {
-                    confirmExitModal.querySelector('.modal-content').classList.add('show');
-                }, 10);
-            });
+        // Event Listeners para navegación y cierre de sesión
+        // CAMBIO: El botón "Regresar al Menú" ahora redirige directamente sin modal
+        backToMenuButton.addEventListener('click', () => {
+            window.location.href = 'menu.html'; // Redirigir directamente al menú
+        });
 
-            // Lógica para el botón "Aceptar" del modal de confirmación de salida
-            confirmExitAcceptBtn.addEventListener('click', () => {
-                sessionStorage.removeItem('loggedInUser'); // Limpiar sesión
-                window.location.href = 'index.html'; // Redirigir al login
-            });
-
-            // Lógica para el botón "Cancelar" del modal de confirmación de salida
-            confirmExitCancelBtn.addEventListener('click', () => {
-                confirmExitModal.querySelector('.modal-content').classList.remove('show');
-                setTimeout(() => {
-                    confirmExitModal.classList.add('hidden');
-                }, 300);
-            });
-
-            // Lógica para el botón "Cerrar Sesión" (ya existente)
-            logoutButton.addEventListener('click', () => {
-                sessionStorage.removeItem('loggedInUser'); // Limpiar sesión
-                window.location.href = 'index.html'; // Redirigir al login
-            });
-        </script>
+        // Lógica para el botón "Cerrar Sesión" (ya existente)
+        logoutButton.addEventListener('click', () => {
+            sessionStorage.removeItem('loggedInUser'); // Limpiar sesión
+            window.location.href = 'index.html'; // Redirigir al login
+        });
+    </script>
     </body>
 </html>
