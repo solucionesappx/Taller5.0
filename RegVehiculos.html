@@ -333,25 +333,12 @@
         });
 
         // Event Listeners para navegación y cierre de sesión
+        // CAMBIO: El botón "Regresar al Menú" ahora redirige directamente sin modal
         backToMenuButton.addEventListener('click', () => {
-            confirmExitModal.classList.remove('hidden');
-            setTimeout(() => {
-                confirmExitModal.querySelector('.modal-content').classList.add('show');
-            }, 10);
+            window.location.href = 'menu.html'; // Redirigir directamente al menú
         });
 
-        confirmExitAcceptBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('loggedInUser'); // Limpiar sesión
-            window.location.href = 'index.html'; // Redirigir al login
-        });
-
-        confirmExitCancelBtn.addEventListener('click', () => {
-            confirmExitModal.querySelector('.modal-content').classList.remove('show');
-            setTimeout(() => {
-                confirmExitModal.classList.add('hidden');
-            }, 300);
-        });
-
+        // Lógica para el botón "Cerrar Sesión" (ya existente)
         logoutButton.addEventListener('click', () => {
             sessionStorage.removeItem('loggedInUser'); // Limpiar sesión
             window.location.href = 'index.html'; // Redirigir al login
