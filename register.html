@@ -243,7 +243,9 @@
                         if (passwordField) {
                             passwordField.select(); // Selecciona el texto del campo
                             document.execCommand('copy'); // Copia el texto seleccionado
+                            passwordField.setSelectionRange(0, 0); // Deselecciona el texto inmediatamente
                             // Opcional: Mostrar un mensaje de confirmación temporal
+                            passwordField.select();
                             const originalIconHtml = copyPasswordIcon.innerHTML;
                             copyPasswordIcon.innerHTML = `<span class="text-green-500">¡Copiado!</span>`;
                             setTimeout(() => {
