@@ -176,26 +176,31 @@
 
             console.log("Contenido completo del objeto JSON enviado:", formDataObj);
 
-            try {
-                const response = await fetch(scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify(formDataObj)
-                });
-                const data = await response.json();
 
-                if (data.status === 'success') {
-                    // Guardar el nuevo usuario en sessionStorage (si es necesario para el flujo posterior)
-                    const newUser = {
-                        Cliente_ID: formDataObj.cliente_id,
-                        Cliente_Nombre: formDataObj.nombre,
-                        Cliente_Clave: formDataObj.clave, // La clave generada
-                        Cliente_Perfil: 'Client', // Por defecto, es un cliente
-                        Cliente_Data_Reg: formDataObj.cliente_treg // Usar la fecha/hora formateada
-                    };
-                    sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
-
-                    showRegistrationSuccessModal(formDataObj, formDataObj.cliente_id);
-                } else {
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify(formDataObj) })
+                .then(response => response.json())
+                .then(responseData => {
+                    console.log('Success:', responseData);
+                    if (responseData.status === 'success') {
+                        // Guardar el nuevo usuario en sessionStorage
+                        const newUser = {
+                            Cliente_ID: formDataObj.cliente_id,
+                            Cliente_Nombre: formDataObj.nombre,
+                            Cliente_Clave: formDataObj.clave, // La clave generada
+                            Cliente_Perfil: 'Client', // Por defecto, es un cliente
+                            Cliente_Data_Reg: formDataObj.cliente_data_reg // Guardar la fecha/hora formateada
+                        };
+                        sessionStorage.setItem('loggedInUser', JSON.stringify(newUser));
+                        showRegistrationSuccessModal(formDataObj, formDataObj.cliente_id);
+                    } else {
+                        showResult(`
+                            <h3 class="text-xl font-bold text-red-700 mb-2">Error en el Registro</h3>
+                            <p class="text-gray-700 mt-2">${responseData.message || 'No se pudo completar el registro. Inténtalo de nuevo.'}</p>
+                        `, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
                     showResult(`
                         <h3 class="text-xl font-bold text-red-700 mb-2">Error en el Registro</h3>
                         <p class="text-gray-700 mt-2">${data.message || 'No se pudo completar el registro. Inténtalo de nuevo.'}</p>
