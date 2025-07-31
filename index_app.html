@@ -313,7 +313,7 @@
         </div>
 
         <!-- Sección: Información (Contenido de Google Docs) -->
-        <div class="sidebar-section" id="infoSection"> <!-- Añadido ID para fácil acceso desde JS -->
+        <div class="sidebar-section">
             <div class="section-header">
                 <h3><i class="fas fa-info-circle"></i> <span>Información</span></h3>
                 <button class="section-toggle">
@@ -322,23 +322,18 @@
             </div>
             <ul class="section-content expanded"> <!-- Por defecto, esta sección está expandida -->
                 <!-- Nuevas pestañas para la sección Información -->
-                <li class="active"> <!-- Pestaña activa por defecto, se ajustará con JS si es Cliente -->
-                    <a href="#" data-tab="tab6">
-                        <i class="fas fa-tools"></i> <span>Dashbord</span>
-                    </a>
-                </li>
-                <li>
+                <li class="active"> <!-- Pestaña activa por defecto -->
                     <a href="#" data-tab="tab7">
                         <i class="fas fa-warehouse"></i> <span>Almacén</span>
-                    </a>
-                </li>               
-                <li>
-                    <a href="#" data-tab="tab9">
-                        <i class="fas fa-tools"></i> <span>Herramientas</span>
                     </a>
                 </li>
                 <li>
                     <a href="#" data-tab="tab8">
+                        <i class="fas fa-tools"></i> <span>Herramientas</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-tab="tab9">
                         <i class="fas fa-users"></i> <span>Clientes</span>
                     </a>
                 </li>
@@ -354,6 +349,7 @@
                 </button>
             </div>
             <ul class="section-content expanded"> <!-- Por defecto, esta sección está expandida -->
+    <!--    <ul class="section-content">  Por defecto, esta sección está colapsada -->
                 <li>
                     <a href="#" data-tab="inicio">
                         <i class="fas fa-home"></i> <span>Inicio</span>
@@ -378,12 +374,12 @@
         </div>
 
         <!-- Sección: Cerrar Sesión -->
-        <!-- Esta sección tendrá la misma apariencia de encabezado que las otras secciones -->
         <div class="sidebar-section mt-auto">
             <div class="section-header" id="logoutSectionHeader">
                 <h3><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></h3>
-                <!-- No hay botón de alternar para esta sección, ya que es una acción directa -->
+                <!-- No hay botón de alternar para esta sección, ya que no es expandible -->
             </div>
+            <!-- No hay section-content para esta sección, ya que es solo un botón de acción -->
         </div>
     </aside>
 
@@ -438,10 +434,9 @@
                 console.error("Error fetching tab content from GAS:", error);
                 // Retorna un objeto con errores para que el renderizado pueda manejarlos
                 return {
-                    tab6: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Dashbord.</p>' },
                     tab7: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Almacén.</p>' },
                     tab8: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Herramientas.</p>' },
-                    tab9: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Clientes.</p>' },
+                    tab9: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Clientes.</p>' }
                 };
             }
         }
@@ -492,8 +487,7 @@
         const mainContent = document.getElementById('mainContent');
         const sidebarLinks = document.querySelectorAll('.sidebar ul li a'); // Todos los enlaces de pestañas
         const sectionToggles = document.querySelectorAll('.sidebar-section .section-toggle'); // Botones de alternar de las secciones
-        const logoutSectionHeader = document.getElementById('logoutSectionHeader'); // Referencia al encabezado de la sección de cerrar sesión
-        const infoSection = document.getElementById('infoSection'); // Referencia a la sección de Información
+        const logoutSectionHeader = document.getElementById('logoutSectionHeader'); // Nuevo: Encabezado de la sección de cerrar sesión
 
         // Función para alternar el estado expandido/colapsado del sidebar principal
         sidebarToggle.addEventListener('click', () => {
@@ -565,54 +559,10 @@
         // Cargar el contenido de la primera pestaña al cargar la página por primera vez
         // y establecer las alturas iniciales de las secciones
         document.addEventListener('DOMContentLoaded', () => {
-            let initialTabToLoad = 'tab7'; // Pestaña por defecto si no se especifica un perfil o es Admin
-
-            const loggedInUserString = sessionStorage.getItem('loggedInUser');
-            if (loggedInUserString) {
-                try {
-                    const loggedInUser = JSON.parse(loggedInUserString);
-
-                    // Lógica para mostrar/ocultar la sección de Información basada en el perfil del usuario
-                    if (loggedInUser.profile !== 'Admin') {
-                        infoSection.style.display = 'none';
-                        console.log('Sección "Información" oculta para usuarios no-Admin.');
-                        // Si no es Admin, redirigir a la pestaña 'inicio'
-                        initialTabToLoad = 'inicio';
-                    } else {
-                        infoSection.style.display = 'block'; // Asegura que sea visible si es Admin
-                        console.log('Sección "Información" visible para Admin.');
-                        // Si es Admin, mantener la pestaña por defecto (Almacén, tab7)
-                        initialTabToLoad = 'tab7';
-                    }
-                } catch (e) {
-                    console.error('Error al parsear loggedInUser de sessionStorage:', e);
-                    // En caso de error al parsear, por seguridad, ocultamos la sección y vamos a Inicio.
-                    infoSection.style.display = 'none';
-                    initialTabToLoad = 'inicio';
-                }
-            } else {
-                // Si no hay usuario logueado en sessionStorage (ej. acceso directo a index_app.html sin login),
-                // ocultamos la sección de Información por seguridad y vamos a Inicio.
-                infoSection.style.display = 'none';
-                console.log('No hay usuario logueado en sessionStorage. Sección "Información" oculta y se carga Inicio.');
-                initialTabToLoad = 'inicio';
-                // Opcional: redirigir a la página de login si no hay sesión activa
-                // window.location.href = './index.html';
+            const initialActiveLink = document.querySelector('.sidebar ul li.active a');
+            if (initialActiveLink) {
+                renderContent(initialActiveLink.dataset.tab);
             }
-
-            // Remover la clase 'active' de todas las pestañas iniciales
-            document.querySelectorAll('.sidebar ul li.active').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Encontrar y añadir la clase 'active' a la pestaña que debe cargarse inicialmente
-            const targetLink = document.querySelector(`.sidebar ul li a[data-tab="${initialTabToLoad}"]`);
-            if (targetLink) {
-                targetLink.parentElement.classList.add('active');
-            }
-
-            // Renderizar el contenido de la pestaña inicial
-            renderContent(initialTabToLoad);
             setSectionMaxHeight(); // Establece la altura correcta para las secciones expandidas al cargar
         });
 
@@ -622,7 +572,7 @@
         // Lógica para el botón de cerrar sesión
         logoutSectionHeader.addEventListener('click', () => {
             sessionStorage.clear(); // Limpia todos los datos de sesión almacenados
-            window.location.href = './index.html'; // Redirige al usuario a la página de inicio de sesión
+            window.location.href = './index_X6.html'; // Redirige al usuario a la página de inicio de sesión
         });
     </script>
 </body>
