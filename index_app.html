@@ -313,7 +313,7 @@
         </div>
 
         <!-- Sección: Información (Contenido de Google Docs) -->
-        <div class="sidebar-section">
+        <div class="sidebar-section" id="infoSection"> <!-- Añadido ID para fácil acceso desde JS -->
             <div class="section-header">
                 <h3><i class="fas fa-info-circle"></i> <span>Información</span></h3>
                 <button class="section-toggle">
@@ -348,7 +348,7 @@
                     <i class="fas fa-chevron-down"></i> <!-- Icono para alternar la sección -->
                 </button>
             </div>
-            <ul class="section-content"> <!-- Por defecto, esta sección está colapsada -->
+            <ul class="section-content expanded"> <!-- Por defecto, esta sección está expandida -->
                 <li>
                     <a href="#" data-tab="inicio">
                         <i class="fas fa-home"></i> <span>Inicio</span>
@@ -370,6 +370,15 @@
                     </a>
                 </li>
             </ul>
+        </div>
+
+        <!-- Sección: Cerrar Sesión -->
+        <!-- Esta sección tendrá la misma apariencia de encabezado que las otras secciones -->
+        <div class="sidebar-section mt-auto">
+            <div class="section-header" id="logoutSectionHeader">
+                <h3><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></h3>
+                <!-- No hay botón de alternar para esta sección, ya que es una acción directa -->
+            </div>
         </div>
     </aside>
 
@@ -477,6 +486,8 @@
         const mainContent = document.getElementById('mainContent');
         const sidebarLinks = document.querySelectorAll('.sidebar ul li a'); // Todos los enlaces de pestañas
         const sectionToggles = document.querySelectorAll('.sidebar-section .section-toggle'); // Botones de alternar de las secciones
+        const logoutSectionHeader = document.getElementById('logoutSectionHeader'); // Referencia al encabezado de la sección de cerrar sesión
+        const infoSection = document.getElementById('infoSection'); // Referencia a la sección de Información
 
         // Función para alternar el estado expandido/colapsado del sidebar principal
         sidebarToggle.addEventListener('click', () => {
@@ -553,10 +564,43 @@
                 renderContent(initialActiveLink.dataset.tab);
             }
             setSectionMaxHeight(); // Establece la altura correcta para las secciones expandidas al cargar
+
+            // Lógica para mostrar/ocultar la sección de Información basada en el perfil del usuario
+            const loggedInUserString = sessionStorage.getItem('loggedInUser');
+            if (loggedInUserString) {
+                try {
+                    const loggedInUser = JSON.parse(loggedInUserString);
+                    // Si el usuario no es 'Admin', oculta la sección de Información
+                    if (loggedInUser.profile !== 'Admin') {
+                        infoSection.style.display = 'none';
+                        console.log('Sección "Información" oculta para usuarios no-Admin.');
+                    } else {
+                        infoSection.style.display = 'block'; // Asegura que sea visible si es Admin
+                        console.log('Sección "Información" visible para Admin.');
+                    }
+                } catch (e) {
+                    console.error('Error al parsear loggedInUser de sessionStorage:', e);
+                    // En caso de error al parsear, por seguridad, ocultamos la sección.
+                    infoSection.style.display = 'none';
+                }
+            } else {
+                // Si no hay usuario logueado en sessionStorage (ej. acceso directo a index_app.html sin login),
+                // ocultamos la sección de Información por seguridad.
+                infoSection.style.display = 'none';
+                console.log('No hay usuario logueado en sessionStorage. Sección "Información" oculta.');
+                // Opcional: redirigir a la página de login si no hay sesión activa
+                // window.location.href = './index_X6.html';
+            }
         });
 
         // Ajustar el max-height de las secciones expandidas al redimensionar la ventana
         window.addEventListener('resize', setSectionMaxHeight);
+
+        // Lógica para el botón de cerrar sesión
+        logoutSectionHeader.addEventListener('click', () => {
+            sessionStorage.clear(); // Limpia todos los datos de sesión almacenados
+            window.location.href = './index_X6.html'; // Redirige al usuario a la página de inicio de sesión
+        });
     </script>
 </body>
 </html>
