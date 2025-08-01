@@ -3,660 +3,486 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sidebar App Moderno</title>
-    <!-- Enlace a Font Awesome para los íconos -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <title>Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Estilos generales para el cuerpo de la página */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            background-color: #f0f2f5; /* Fondo claro para el cuerpo */
-            overflow-x: hidden; /* Evita el scroll horizontal durante la transición */
-        }
-
-        /* Estilos para el contenedor principal del sidebar */
-        .sidebar {
-            width: 250px; /* Ancho inicial del sidebar */
-            background-color: #2c3e50; /* Color oscuro para el fondo del sidebar */
-            color: white; /* Color de texto blanco */
-            padding: 20px 0; /* Espaciado interno superior e inferior */
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra sutil a la derecha */
-            display: flex;
-            flex-direction: column; /* Organiza los elementos en columna */
-            height: 100vh; /* Ocupa toda la altura de la ventana (viewport height) */
-            position: fixed; /* Fija el sidebar en la pantalla */
-            left: 0; /* Alineado a la izquierda */
-            top: 0; /* Alineado en la parte superior */
-            transition: width 0.3s ease; /* Transición suave para el ancho */
-            z-index: 1000; /* Asegura que esté por encima de otros elementos */
-        }
-
-        /* Estilos para el estado colapsado del sidebar principal */
-        .sidebar.collapsed {
-            width: 80px; /* Ancho reducido cuando está colapsado */
-        }
-
-        /* Estilos para el encabezado del sidebar principal */
-        .sidebar-header {
-            display: flex;
-            justify-content: space-between; /* Espacio entre el título y el botón */
+        body { font-family: 'Inter', sans-serif; }
+        .btn-animation { transition: all 0.2s ease-in-out; }
+        .btn-animation:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        .input-focus-animation:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); }
+        .message-success { background-color: #d1fae5; border-color: #a7f3d0; color: #065f46; }
+        .message-error { background-color: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+        .message-info { background-color: #e0f2fe; border-color: #93c5fd; color: #1e40af; }
+        /* Estilos para los modales */
+        .modal {
+            display: none; /* Oculto por defecto */
+            position: fixed; /* Posición fija */
+            z-index: 1000; /* Por encima de todo */
+            left: 0;
+            top: 0;
+            width: 100%; /* Ancho completo */
+            height: 100%; /* Alto completo */
+            overflow: auto; /* Habilitar scroll si es necesario */
+            background-color: rgba(0,0,0,0.4); /* Fondo semi-transparente */
+            justify-content: center;
             align-items: center;
-            margin-bottom: 30px; /* Margen inferior */
-            padding: 0 20px; /* Espaciado lateral */
-            transition: padding 0.3s ease; /* Transición para el padding */
         }
-
-        .sidebar.collapsed .sidebar-header {
-            padding: 0 10px; /* Reduce el padding cuando colapsa */
-            justify-content: center; /* Centra el botón cuando el título desaparece */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
         }
-
-        .sidebar-header h2 {
-            margin: 0; /* Elimina el margen por defecto del h2 */
-            font-size: 1.8em; /* Tamaño de fuente */
-            color: #ecf0f1; /* Color del título */
-            white-space: nowrap; /* Evita que el texto se rompa */
-            overflow: hidden; /* Oculta el texto que se desborda */
-            transition: opacity 0.3s ease, font-size 0.3s ease; /* Transición para la opacidad y tamaño */
+        /* Nueva clase para el contenido del modal de contraseña, con un max-width menor y posición ajustada */
+        .password-display-modal-content {
+            max-width: 350px; /* Ancho máximo reducido para el modal de la contraseña */
+            transform: translateY(-50px); /* Mover 50px hacia arriba */
         }
-
-        .sidebar.collapsed .sidebar-header h2 {
-            opacity: 0; /* Oculta el título cuando colapsa */
-            font-size: 0; /* Reduce el tamaño para que no ocupe espacio */
-            width: 0; /* Asegura que no ocupe espacio */
-        }
-
-        /* Estilos para el botón de alternar (toggle) del sidebar principal */
-        .sidebar-toggle {
-            background: none;
-            border: none;
-            color: #ecf0f1;
-            font-size: 1.5em;
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
-            padding: 5px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
         }
-
-        .sidebar-toggle:hover {
-            background-color: #34495e;
-            transform: scale(1.1); /* Efecto de escala al pasar el ratón */
-        }
-
-        /* Estilos para las secciones desplegables dentro del sidebar */
-        .sidebar-section {
-            margin-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Separador entre secciones */
-            padding-bottom: 10px;
-        }
-
-        .sidebar-section:last-of-type {
-            border-bottom: none; /* Sin separador para la última sección */
-            padding-bottom: 0;
-        }
-
-        /* Estilos para el encabezado de cada sección desplegable */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
             cursor: pointer;
-            background-color: #34495e; /* Fondo ligeramente diferente para el encabezado */
-            border-radius: 5px;
-            margin: 0 10px; /* Margen desde los bordes del sidebar */
-            transition: background-color 0.3s ease;
         }
-
-        .section-header:hover {
-            background-color: #4a627a;
-        }
-
-        .section-header h3 {
-            margin: 0;
-            font-size: 1.1em;
-            color: #ecf0f1;
-            display: flex;
-            align-items: center;
-            white-space: nowrap; /* Evita que el texto se rompa */
-            overflow: hidden; /* Oculta el texto que se desborda */
-            transition: opacity 0.3s ease, width 0.3s ease;
-        }
-
-        .section-header h3 i {
-            margin-right: 10px;
-            font-size: 1.2em;
-        }
-
-        /* Oculta el texto del encabezado de la sección cuando el sidebar principal está colapsado */
-        .sidebar.collapsed .section-header h3 {
-            opacity: 0;
-            width: 0;
-        }
-        .sidebar.collapsed .section-header h3 i {
-            margin-right: 0; /* Centra el icono */
-        }
-
-        /* Estilos para el botón de alternar de la sección */
-        .section-toggle {
-            background: none;
-            border: none;
-            color: #ecf0f1;
-            font-size: 20px; /* Tamaño fijo para el ícono */
-            width: 30px; /* Ancho fijo para el botón */
-            height: 30px; /* Alto fijo para el botón */
-            display: flex; /* Usar flexbox para centrar el ícono */
-            align-items: center; /* Centrar verticalmente */
-            justify-content: center; /* Centrar horizontalmente */
-            cursor: pointer;
-            border-radius: 5px;
-            transition: transform 0.3s ease;
-        }
-
-        /* Asegura que el ícono dentro del botón de alternar herede el tamaño fijo */
-        .section-toggle i {
-            font-size: inherit; /* Hereda el tamaño de 20px del padre (.section-toggle) */
-            line-height: 1; /* Para asegurar la alineación vertical */
-        }
-
-        /* Rotación del icono de la flecha al expandir/colapsar */
-        .section-content.expanded + .section-header .section-toggle i {
-            transform: rotate(180deg);
-        }
-
-        /* Estilos para el contenido de cada sección (la lista de pestañas) */
-        .section-content {
-            list-style: none;
-            padding: 0;
-            margin: 5px 0 0 0; /* Ajusta el margen superior */
-            overflow: hidden; /* Crucial para la animación de max-height */
-            transition: max-height 0.3s ease-out; /* Animación suave */
-            max-height: 0; /* Por defecto, colapsado */
-        }
-
-        .section-content.expanded {
-            max-height: 500px; /* Un valor suficientemente grande para el contenido, se ajustará con JS */
-        }
-
-        /* Estilos para los enlaces de las pestañas dentro de las secciones */
-        .sidebar ul li a {
-            display: flex; /* Permite alinear ícono y texto */
-            align-items: center; /* Centra verticalmente los elementos */
-            padding: 15px 20px; /* Espaciado interno */
-            color: #ecf0f1; /* Color de texto por defecto */
-            text-decoration: none; /* Elimina el subrayado */
-            font-size: 1.1em; /* Tamaño de fuente */
-            transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease; /* Transición suave */
-        }
-
-        /* Ajustes de padding y centrado cuando el sidebar principal está colapsado */
-        .sidebar.collapsed ul li a {
-            padding: 15px 0; /* Reduce el padding horizontal */
-            justify-content: center; /* Centra los íconos */
-        }
-
-        /* Estilos para los íconos dentro de los enlaces de las pestañas */
-        .sidebar ul li a i {
-            margin-right: 15px; /* Margen a la derecha del ícono */
-            font-size: 1.3em; /* Tamaño del ícono */
-            transition: margin-right 0.3s ease; /* Transición para el margen */
-        }
-
-        .sidebar.collapsed ul li a i {
-            margin-right: 0; /* Elimina el margen cuando el sidebar principal colapsa */
-        }
-
-        /* Estilos para el texto de las pestañas */
-        .sidebar ul li a span {
-            white-space: nowrap; /* Evita que el texto se rompa */
-            overflow: hidden; /* Oculta el texto que se desborda */
-            transition: opacity 0.3s ease, width 0.3s ease; /* Transición suave para la opacidad y ancho */
-            width: auto; /* Ancho automático por defecto */
-            opacity: 1; /* Visible por defecto */
-        }
-
-        .sidebar.collapsed ul li a span {
-            opacity: 0; /* Oculta el texto cuando el sidebar principal colapsa */
-            width: 0; /* Reduce el ancho para que no ocupe espacio */
-        }
-
-        /* Efecto al pasar el ratón (hover) sobre los enlaces de las pestañas */
-        .sidebar ul li a:hover {
-            background-color: #34495e; /* Un tono un poco más claro al pasar el ratón */
-            color: #ffffff; /* Color de texto blanco */
-        }
-
-        /* Estilos para la pestaña activa */
-        .sidebar ul li.active a {
-            background-color: #3498db; /* Color de acento para la pestaña activa (azul) */
-            color: #ffffff; /* Color de texto blanco */
-            font-weight: bold; /* Texto en negrita */
-            border-left: 5px solid #2980b9; /* Indicador visual de activo: una línea azul oscuro a la izquierda */
-        }
-
-        /* Ajuste del indicador activo cuando el sidebar principal está colapsado */
-        .sidebar.collapsed ul li.active a {
-            border-left: none; /* Elimina el borde izquierdo */
-            border-bottom: 5px solid #2980b9; /* Añade un borde inferior como indicador */
-        }
-
-        /* Estilos para el contenido principal de la página */
-        .main-content {
-            margin-left: 250px; /* Deja espacio a la izquierda para el sidebar fijo */
-            padding: 20px; /* Espaciado interno */
-            flex-grow: 1; /* Permite que el contenido principal ocupe el espacio restante */
-            background-color: #f9f9f9; /* Nuevo color de fondo: gris muy claro */
-            min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
-            box-shadow: inset 5px 0 10px -5px rgba(0, 0, 0, 0.05); /* Sombra sutil al borde del contenido */
-            transition: margin-left 0.3s ease; /* Transición suave para el margen */
-        }
-
-        .main-content.shifted {
-            margin-left: 80px; /* Ajusta el margen cuando el sidebar está colapsado */
-        }
-
-        /* Media queries para responsividad (ajustado para mostrar texto por defecto en móvil) */
-        @media (max-width: 768px) {
-            /* En pantallas pequeñas, el sidebar por defecto tendrá el ancho completo y mostrará texto */
-            .sidebar {
-                width: 250px; /* Permite el ancho completo por defecto en móvil */
-                padding: 20px 0;
-            }
-
-            /* Aseguramos que el main-content se ajuste al sidebar de 250px */
-            .main-content {
-                margin-left: 250px;
-            }
-
-            /* Las reglas de 'collapsed' seguirán funcionando cuando el usuario haga clic en el botón de alternar */
-            .sidebar.collapsed {
-                width: 80px; /* El ancho se reduce a 80px solo cuando está colapsado */
-            }
-
-            .sidebar.collapsed .sidebar-header h2 {
-                opacity: 0;
-                font-size: 0;
-                width: 0;
-            }
-
-            .sidebar.collapsed .sidebar-section .section-header h3 {
-                opacity: 0;
-                width: 0;
-            }
-            .sidebar.collapsed .sidebar-section .section-header h3 i {
-                margin-right: 0;
-            }
-
-            .sidebar.collapsed ul li a {
-                padding: 15px 0;
-                justify-content: center;
-            }
-
-            .sidebar.collapsed ul li a i {
-                margin-right: 0;
-            }
-
-            .sidebar.collapsed ul li a span {
-                opacity: 0;
-                width: 0;
-            }
-
-            .main-content.shifted {
-                margin-left: 80px; /* El contenido principal se ajusta solo cuando el sidebar está colapsado */
-            }
-
-            /* Ajuste para el indicador de pestaña activa en el estado colapsado móvil */
-            .sidebar.collapsed ul li.active a {
-                border-left: none;
-                border-bottom: 5px solid #2980b9;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body>
-    <aside id="mySidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h2>Mi App</h2>
-            <button id="sidebarToggle" class="sidebar-toggle">
-                <i class="fas fa-bars"></i> <!-- Icono de hamburguesa para alternar el sidebar principal -->
+<body class="bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-lg mx-auto">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-gray-100">
+            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">App Taller Mecánico</h1>
+            <p class="text-center text-gray-500 mb-8 max-w-sm mx-auto">Ingresa tus credenciales para acceder</p>
+
+            <!-- Login Form Container -->
+            <div id="login-section" class="form-container">
+                <div class="bg-white p-8 rounded-xl w-full">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="login-username">
+                            Nombre del Cliente
+                        </label>
+                        <input
+                            type="text"
+                            id="login-username"
+                            class="input-focus-animation shadow appearance-none border rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="Ej. Juan Perez"
+                        >
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="login-password">
+                            Contraseña
+                        </label>
+                        <div class="relative flex items-center">
+                            <input
+                                type="password"
+                                id="login-password"
+                                class="input-focus-animation shadow appearance-none border rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-10"
+                                placeholder="Ingresar Contraseña"
+                            >
+                            <span id="toggle-password" class="absolute right-3 cursor-pointer text-gray-500 hover:text-gray-700">
+                                <!-- Icono de ojo para mostrar/ocultar contraseña -->
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        id="login-button"
+                        class="btn-animation w-full flex items-center justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        Iniciar Sesión
+                    </button>
+                    <!-- Botón para registrar usuario, ahora visible y con estilos -->
+                    <button
+                        id="show-register-form-btn"
+                        class="btn-animation w-full flex items-center justify-center py-3.5 px-4 mt-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+                    >
+                        Registrar Usuario
+                    </button>
+                    <div class="mt-4 text-center">
+                        <a href="#" id="forgot-password-link" class="text-blue-600 hover:underline text-sm">¿Olvidaste tu contraseña?</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área para mostrar mensajes de login -->
+            <div id="message-container" class="mt-8 text-center p-4 rounded-xl transition-all duration-300 ease-in-out hidden"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Recuperación de Contraseña -->
+    <div id="recovery-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-recovery-modal">&times;</span>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Recuperar/Generar Contraseña</h2>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="recovery-username">
+                    Nombre del Cliente
+                </label>
+                <input
+                    type="text"
+                    id="recovery-username"
+                    class="input-focus-animation shadow appearance-none border rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="Ej. Juan Perez"
+                >
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="recovery-idx">
+                    Cédula de Identidad (CI)
+                </label>
+                <input
+                    type="text"
+                    id="recovery-idx"
+                    class="input-focus-animation shadow appearance-none border rounded-lg w-full py-2.5 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="CI de cliente"
+                >
+            </div>
+            <div class="flex space-x-2 mb-4"> <!-- Reducido el espacio entre botones -->
+                <button
+                    id="recover-password-button"
+                    class="btn-animation w-1/3 flex items-center justify-center py-3.5 px-2 border border-transparent rounded-xl shadow-lg text-xs font-semibold text-black bg-gray-300 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                    Recuperación
+                </button>
+                <button
+                    id="generate-auto-password-button" 
+                    class="btn-animation w-1/3 flex items-center justify-center py-3.5 px-2 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-gray-800 bg-green-300 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300"
+                >
+                    Automática
+                </button>
+                <button
+                    id="manual-password-button" 
+                    class="btn-animation w-1/3 flex items-center justify-center py-3.5 px-2 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-blue-300 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    Manual
+                </button>
+            </div>
+            <div id="recovery-message-container" class="mt-4 text-center p-3 rounded-xl transition-all duration-300 ease-in-out hidden"></div>
+        </div>
+    </div>
+
+    <!-- Nuevo Modal para Mostrar/Ingresar Contraseña -->
+    <div id="password-display-modal" class="modal">
+        <div class="modal-content password-display-modal-content"> <!-- Aquí se aplica la nueva clase -->
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center" id="password-display-title">Tu Contraseña</h2>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="displayed-password">
+                   <span id="password-input-label">Contraseña:</span> <!-- Etiqueta dinámica -->
+                </label>
+                <input
+                    type="text"
+                    id="displayed-password"
+                    class="shadow appearance-none border rounded-lg w-full py-2.5 px-3 text-gray-700 leading-tight bg-gray-100 cursor-text"
+                    readonly <!-- Inicialmente de solo lectura -->
+                >
+            </div>
+            <button
+                id="accept-password-button"
+                class="btn-animation w-full flex items-center justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+                Aceptar
             </button>
         </div>
-
-        <!-- Sección: Información (Contenido de Google Docs) -->
-        <div class="sidebar-section" id="infoSection"> <!-- Añadido ID para fácil acceso desde JS -->
-            <div class="section-header">
-                <h3><i class="fas fa-info-circle"></i> <span>Información</span></h3>
-                <button class="section-toggle">
-                    <i class="fas fa-chevron-up"></i> <!-- Icono para alternar la sección -->
-                </button>
-            </div>
-            <ul class="section-content expanded"> <!-- Por defecto, esta sección está expandida -->
-                <!-- Nuevas pestañas para la sección Información -->
-                <li class="active"> <!-- Pestaña activa por defecto, se ajustará con JS si es Cliente -->
-                    <a href="#" data-tab="tab6">
-                        <i class="fas fa-tools"></i> <span>Dashbord</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-tab="tab7">
-                        <i class="fas fa-warehouse"></i> <span>Almacén</span>
-                    </a>
-                </li>               
-                <li>
-                    <a href="#" data-tab="tab9">
-                        <i class="fas fa-tools"></i> <span>Herramientas</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-tab="tab8">
-                        <i class="fas fa-users"></i> <span>Clientes</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Sección: Aplicación (Pestañas de la App) -->
-        <div class="sidebar-section">
-            <div class="section-header">
-                <h3><i class="fas fa-th-large"></i> <span>Aplicación</span></h3>
-                <button class="section-toggle">
-                    <i class="fas fa-chevron-down"></i> <!-- Icono para alternar la sección -->
-                </button>
-            </div>
-            <ul class="section-content expanded"> <!-- Por defecto, esta sección está expandida -->
-                <li>
-                    <a href="#" data-tab="inicio">
-                        <i class="fas fa-home"></i> <span>Inicio</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-tab="vehiculos">
-                        <i class="fas fa-car"></i> <span>Vehículos</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-tab="ordenes">
-                        <i class="fas fa-clipboard-list"></i> <span>Órdenes</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" data-tab="estadisticas">
-                        <i class="fas fa-chart-line"></i> <span>Estadísticas</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Sección: Cerrar Sesión -->
-        <!-- Esta sección tendrá la misma apariencia de encabezado que las otras secciones -->
-        <div class="sidebar-section mt-auto">
-            <div class="section-header" id="logoutSectionHeader">
-                <h3><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></h3>
-                <!-- No hay botón de alternar para esta sección, ya que es una acción directa -->
-            </div>
-        </div>
-    </aside>
-
-    <main id="mainContent" class="main-content">
-        <!-- El contenido se cargará aquí dinámicamente -->
-        <p class="text-gray-600">Cargando contenido...</p>
-        <!-- Nuevo elemento para mostrar el nombre de usuario -->
-        <div id="welcomeMessage" class="mt-4 text-lg font-semibold text-gray-700"></div>
-    </main>
-
+    </div>
+    
     <script>
-        // **IMPORTANTE:** Reemplaza esta URL con la URL de tu aplicación web de Google Apps Script.
-        // La obtendrás después de publicar tu script de GAS.
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzGMsc609qjhWznXsuWR_KgrRw7Trurmvea1kjpjQW7zSUY1-hTp9fvYD7ocEqatCDWIQ/exec';
+        // --- CONFIGURACIÓN --- ref DRIVE App Lectura Datos Taller (script)      
+        // ¡IMPORTANTE! Reemplaza esta URL con la URL de tu Google Apps Script Web App desplegada.
+        const GOOGLE_APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz3x4bm5RETRKsqn2w9eJrKTqVUbRQX96ChZFCdyXA8_IdQaTcqrXRpOnF6F_9PzOaYFw/exec'; // Asegúrate de que esta URL sea la correcta
 
-        let cachedGasContent = {}; // Caché para almacenar el contenido de Google Apps Script una vez cargado
+        // Elementos del DOM
+        const loginUsernameInput = document.getElementById('login-username');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginButton = document.getElementById('login-button');
+        const messageContainer = document.getElementById('message-container');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const showRegisterFormBtn = document.getElementById('show-register-form-btn');
+        const togglePassword = document.getElementById('toggle-password'); // Nuevo: Icono para mostrar/ocultar contraseña
 
-        // Datos de ejemplo locales para las pestañas de la sección "Aplicación"
-        const localTabContent = {
-            inicio: {
-                title: "Bienvenido a Inicio",
-                text: "Aquí encontrarás un resumen de tus actividades recientes y las noticias más importantes. ¡Mantente al día con todo lo que sucede en tu aplicación!"
-            },
-            estadisticas: {
-                title: "Tus Estadísticas",
-                text: "Visualiza gráficos y datos sobre tu uso de la aplicación. Descubre tus hábitos y mejora tu experiencia."
-            },
-            // Nuevas pestañas para la sección Aplicación
-            vehiculos: {
-                title: "Gestión de Vehículos",
-                text: "Aquí puedes añadir, editar y ver los detalles de todos los vehículos registrados en el taller."
-            },
-            ordenes: {
-                title: "Gestión de Órdenes de Servicio",
-                text: "Administra las órdenes de trabajo, su estado y el historial de servicios de los vehículos."
+        // Elementos del Modal de Recuperación
+        const recoveryModal = document.getElementById('recovery-modal');
+        const closeRecoveryModalButton = document.getElementById('close-recovery-modal');
+        const recoveryUsernameInput = document.getElementById('recovery-username');
+        const recoveryIdxInput = document.getElementById('recovery-idx');
+        const recoverPasswordButton = document.getElementById('recover-password-button');
+        const generateAutoPasswordButton = document.getElementById('generate-auto-password-button');
+        const manualPasswordButton = document.getElementById('manual-password-button');
+        const recoveryMessageContainer = document.getElementById('recovery-message-container');
+
+        // Elementos del Modal de Mostrar/Ingresar Contraseña
+        const passwordDisplayModal = document.getElementById('password-display-modal');
+        const passwordDisplayTitle = document.getElementById('password-display-title');
+        const passwordInputLabel = document.getElementById('password-input-label');
+        const displayedPasswordInput = document.getElementById('displayed-password');
+        const acceptPasswordButton = document.getElementById('accept-password-button');
+
+        // Variable para controlar el modo del modal de contraseña
+        let currentPasswordModalMode = 'display'; // 'display' o 'manual_input'
+
+        // Función para formatear la fecha y hora a dd/mm/aaaa hh:mm:ss
+        function formatDateTime(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses son 0-indexados
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // Función para mostrar mensajes en un contenedor específico
+        function showMessage(container, message, type, duration = 5000) {
+            container.textContent = message;
+            container.className = `mt-4 text-center p-3 rounded-xl transition-all duration-300 ease-in-out ${type === 'success' ? 'message-success' : (type === 'error' ? 'message-error' : 'message-info')}`;
+            container.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, duration);
+        }
+
+        // Función para mostrar el modal de contraseña (ahora con modo)
+        function showPasswordDisplayModal(password = '', title = 'Tu Contraseña', mode = 'display') {
+            passwordDisplayTitle.textContent = title;
+            displayedPasswordInput.value = password;
+            currentPasswordModalMode = mode;
+
+            // Ocultar cualquier mensaje previo del modal de recuperación
+            recoveryMessageContainer.classList.add('hidden');
+
+            if (mode === 'manual_input') {
+                passwordInputLabel.textContent = 'Nueva Contraseña (4 dígitos):';
+                displayedPasswordInput.readOnly = false;
+                displayedPasswordInput.classList.remove('bg-gray-100'); // Eliminar fondo de solo lectura
+                acceptPasswordButton.textContent = 'Aceptar';
+            } else { // 'display' mode
+                passwordInputLabel.textContent = 'Contraseña:';
+                displayedPasswordInput.readOnly = true;
+                displayedPasswordInput.classList.add('bg-gray-100'); // Añadir fondo de solo lectura
+                acceptPasswordButton.textContent = 'Aceptar';
             }
-        };
+            passwordDisplayModal.style.display = 'flex';
+        }
 
-        // Función para obtener el contenido de las pestañas desde Google Apps Script (para tab6-tab9)
-        async function fetchGasTabContent() {
-            if (Object.keys(cachedGasContent).length > 0) {
-                return cachedGasContent; // Si ya está en caché, lo devuelve
+        // Lógica del Login
+        loginButton.addEventListener('click', async () => {
+            const username = loginUsernameInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+
+            if (!username || !password) {
+                showMessage(messageContainer, 'Por favor, ingresa tu nombre de usuario y clave.', 'error', 8000);
+                return;
             }
+
+            showMessage(messageContainer, 'Verificando credenciales...', 'info');
 
             try {
-                const response = await fetch(GAS_WEB_APP_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                // Modificado: Enviar 'action: login' en el body para doPost, o como parámetro para doGet
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
                 const data = await response.json();
-                cachedGasContent = data; // Almacena en caché
-                return data;
-            } catch (error) {
-                console.error("Error fetching tab content from GAS:", error);
-                // Retorna un objeto con errores para que el renderizado pueda manejarlos
-                return {
-                    tab6: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Dashbord.</p>' },
-                    tab7: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Almacén.</p>' },
-                    tab8: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Clientes.</p>' },
-                    tab9: { rawHtml: '<p class="text-red-500">Error al cargar el contenido de Herramientas.</p>' },
-                };
-            }
-        }
 
-        // Función unificada para renderizar el contenido de cualquier pestaña
-        async function renderContent(tabId) {
-            mainContent.innerHTML = '<p class="text-gray-600">Cargando contenido...</p>'; // Mostrar mensaje de carga
-
-            // Limpiar estilos inyectados previamente de Google Docs
-            const gasStylesTag = document.getElementById('gas-injected-styles');
-            if (gasStylesTag) {
-                gasStylesTag.innerHTML = '';
-            }
-
-            if (tabId.startsWith('tab')) { // Si la pestaña es de la sección "Información" (GAS)
-                const allContent = await fetchGasTabContent();
-                const content = allContent[tabId];
-
-                if (content && content.rawHtml) {
-                    mainContent.innerHTML = content.rawHtml; // Inyectar el HTML directamente
-
-                    // Inyectar estilos CSS extraídos de Google Docs si existen
-                    let currentGasStylesTag = document.createElement('style');
-                    currentGasStylesTag.id = 'gas-injected-styles';
-                    document.head.appendChild(currentGasStylesTag);
+                if (data.success) {
+                    const loggedInUserWithTimestamp = {
+                        ...data.user,
+                        Cliente_Data_Reg: formatDateTime(new Date()),
+                        // TODO: Asegúrate de que el perfil del usuario venga de la respuesta de Google Apps Script (data.user.profile).
+                        // Para demostración, si no viene del backend, se asume 'Admin'.
+                        profile: data.user.profile || 'Admin' 
+                    };sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUserWithTimestamp))
+                    ;
                     
-                    if (content.extractedCss) {
-                        currentGasStylesTag.innerHTML = content.extractedCss;
-                    }
+                    console.log('Usuario logueado y datos guardados en sessionStorage:', loggedInUserWithTimestamp);
+
+                    showMessage(messageContainer, '¡Inicio de Sesión Exitoso! Redirigiendo...', 'success');
+                    window.location.href = './index_app.html'; // Redirigir al nuevo menú
                 } else {
-                    mainContent.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible desde Google Docs.</p>`;
+                    showMessage(messageContainer, data.message, 'error', 8000);
                 }
-            } else { // Si la pestaña es de la sección "Aplicación" (datos locales)
-                const content = localTabContent[tabId];
-                if (content) {
-                    mainContent.innerHTML = `<h1>${content.title}</h1><p>${content.text}</p>`;
-                } else {
-                    mainContent.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible localmente.</p>`;
-                }
+            } catch (error) {
+                console.error('Error al iniciar sesión:', error);
+                showMessage(messageContainer, 'Error de conexión. Intenta de nuevo más tarde.', 'error', 8000);
             }
-            // Después de cargar el contenido, mostrar el mensaje de bienvenida
-            displayWelcomeMessage();
-        }
+        });
 
-        // Obtener referencias a los elementos del DOM
-        const sidebar = document.getElementById('mySidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarLinks = document.querySelectorAll('.sidebar ul li a'); // Todos los enlaces de pestañas
-        const sectionToggles = document.querySelectorAll('.sidebar-section .section-toggle'); // Botones de alternar de las secciones
-        const logoutSectionHeader = document.getElementById('logoutSectionHeader'); // Referencia al encabezado de la sección de cerrar sesión
-        const infoSection = document.getElementById('infoSection'); // Referencia a la sección de Información
-        const welcomeMessageDiv = document.getElementById('welcomeMessage'); // Nuevo: Referencia al div del mensaje de bienvenida
+        // Lógica para abrir el modal de recuperación/generación de contraseña
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            recoveryModal.style.display = 'flex';
+            recoveryMessageContainer.classList.add('hidden');
+            recoveryUsernameInput.value = '';
+            recoveryIdxInput.value = '';
+        });
 
-        // Función para mostrar el mensaje de bienvenida con el nombre del usuario
-        function displayWelcomeMessage() {
-            const loggedInUserString = sessionStorage.getItem('loggedInUser');
-            if (loggedInUserString) {
-                try {
-                    const loggedInUser = JSON.parse(loggedInUserString);
-                    // Asumiendo que el nombre de usuario está en 'username' o 'nombreCliente'
-                    const userName = loggedInUser.username || loggedInUser.nombreCliente || 'Usuario';
-                    welcomeMessageDiv.textContent = `¡Hola, ${userName}!`;
-                    welcomeMessageDiv.classList.remove('hidden'); // Asegurarse de que sea visible
-                } catch (e) {
-                    console.error('Error al parsear loggedInUser de sessionStorage para el mensaje de bienvenida:', e);
-                    welcomeMessageDiv.classList.add('hidden'); // Ocultar si hay error
-                }
-            } else {
-                welcomeMessageDiv.classList.add('hidden'); // Ocultar si no hay usuario logueado
+        // Lógica para cerrar el modal de recuperación
+        closeRecoveryModalButton.addEventListener('click', () => {
+            recoveryModal.style.display = 'none';
+        });
+
+        // Cerrar el modal de recuperación si se hace clic fuera del contenido
+        window.addEventListener('click', (event) => {
+            if (event.target === recoveryModal) {
+                recoveryModal.style.display = 'none';
             }
-        }
-
-        // Función para alternar el estado expandido/colapsado del sidebar principal
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed'); // Alterna la clase 'collapsed' en el sidebar
-            mainContent.classList.toggle('shifted'); // Alterna la clase 'shifted' en el contenido principal
-            // Ajusta el max-height de las secciones expandidas al colapsar/expandir el sidebar principal
-            setSectionMaxHeight();
         });
 
-        // Función para manejar la pestaña activa al hacer clic y cargar su contenido
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', (event) => {
-                event.preventDefault(); // Evita el comportamiento por defecto del enlace (navegar)
+        // Lógica para cerrar el modal de mostrar/ingresar contraseña
+        acceptPasswordButton.addEventListener('click', async () => {
+            if (currentPasswordModalMode === 'manual_input') {
+                const username = recoveryUsernameInput.value.trim();
+                const idx = recoveryIdxInput.value.trim();
+                const manualPassword = displayedPasswordInput.value.trim();
 
-                // Remover la clase 'active' de todas las pestañas
-                document.querySelectorAll('.sidebar ul li').forEach(item => {
-                    item.classList.remove('active');
-                });
-
-                // Añadir la clase 'active' a la pestaña clicada
-                link.parentElement.classList.add('active');
-
-                // Cargar el contenido de la pestaña usando la función unificada
-                const tabName = link.dataset.tab;
-                renderContent(tabName);
-            });
-        });
-
-        // Función para alternar el estado expandido/colapsado de las secciones internas
-        sectionToggles.forEach(button => {
-            button.addEventListener('click', () => {
-                const sectionContent = button.closest('.section-header').nextElementSibling; // La lista ul.section-content
-                const icon = button.querySelector('i');
-
-                if (sectionContent.classList.contains('expanded')) {
-                    // Si está expandido, lo colapsamos
-                    sectionContent.style.maxHeight = sectionContent.scrollHeight + 'px'; // Establece la altura actual
-                    setTimeout(() => {
-                        sectionContent.style.maxHeight = '0'; // Luego colapsa a 0
-                        sectionContent.classList.remove('expanded');
-                    }, 10); // Pequeño retraso para permitir la transición
-                    icon.classList.remove('fa-chevron-up');
-                    icon.classList.add('fa-chevron-down');
-                } else {
-                    // Si está colapsado, lo expandimos
-                    sectionContent.style.maxHeight = sectionContent.scrollHeight + 'px'; // Expande a la altura completa
-                    sectionContent.classList.add('expanded');
-                    icon.classList.remove('fa-chevron-down');
-                    icon.classList.add('fa-chevron-up');
-                    // Una vez que la transición termine, podemos quitar el max-height para contenido dinámico
-                    sectionContent.addEventListener('transitionend', function handler() {
-                        if (sectionContent.classList.contains('expanded')) {
-                            sectionContent.style.maxHeight = 'none'; // Permite que el contenido se ajuste libremente
-                        }
-                        sectionContent.removeEventListener('transitionend', handler);
-                    });
+                if (!/^\d{4}$/.test(manualPassword)) {
+                    showMessage(recoveryMessageContainer, 'La contraseña manual debe ser de 4 dígitos numéricos.', 'error');
+                    return; // No cierra el modal, permite corregir
                 }
-            });
-        });
 
-        // Función para establecer el max-height inicial de las secciones expandidas
-        function setSectionMaxHeight() {
-            document.querySelectorAll('.sidebar-section .section-content.expanded').forEach(content => {
-                content.style.maxHeight = 'none'; // Temporalmente para obtener el scrollHeight correcto
-                content.style.maxHeight = content.scrollHeight + 'px';
-            });
-        }
+                showMessage(recoveryMessageContainer, 'Actualizando contraseña manualmente...', 'info');
 
-        // Cargar el contenido de la primera pestaña al cargar la página por primera vez
-        // y establecer las alturas iniciales de las secciones
-        document.addEventListener('DOMContentLoaded', () => {
-            let initialTabToLoad = 'tab6'; // Pestaña por defecto si no se especifica un perfil o es Admin
-
-            const loggedInUserString = sessionStorage.getItem('loggedInUser');
-            if (loggedInUserString) {
                 try {
-                    const loggedInUser = JSON.parse(loggedInUserString);
+                    // Modificado: Enviar 'action: manualPassword' en el body para doPost, o como parámetro para doGet
+                    const response = await fetch(`${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=manualPassword&username=${encodeURIComponent(username)}&idx=${encodeURIComponent(idx)}&newPassword=${encodeURIComponent(manualPassword)}`);
+                    const data = await response.json();
 
-                    // Lógica para mostrar/ocultar la sección de Información basada en el perfil del usuario
-                    if (loggedInUser.profile !== 'Admin') {
-                        infoSection.style.display = 'none';
-                        console.log('Sección "Información" oculta para usuarios no-Admin.');
-                        // Si no es Admin, redirigir a la pestaña 'inicio'
-                        initialTabToLoad = 'inicio';
+                    if (data.success) {
+                        showMessage(recoveryMessageContainer, 'Contraseña actualizada manualmente con éxito.', 'success');
+                        passwordDisplayModal.style.display = 'none';
+                        recoveryModal.style.display = 'none';
+                        // Resetear el estado del modal de contraseña a 'display' por defecto
+                        showPasswordDisplayModal('', '', 'display');
                     } else {
-                        infoSection.style.display = 'block'; // Asegura que sea visible si es Admin
-                        console.log('Sección "Información" visible para Admin.');
-                        // Si es Admin, mantener la pestaña por defecto (Dashbord, tab6)
-                        initialTabToLoad = 'tab6';
+                        showMessage(recoveryMessageContainer, data.message, 'error');
                     }
-                } catch (e) {
-                    console.error('Error al parsear loggedInUser de sessionStorage:', e);
-                    // En caso de error al parsear, por seguridad, ocultamos la sección y vamos a Inicio.
-                    infoSection.style.display = 'none';
-                    initialTabToLoad = 'inicio';
+                } catch (error) {
+                    console.error('Error al actualizar contraseña manualmente:', error);
+                    showMessage(recoveryMessageContainer, 'Error de conexión al actualizar contraseña manual. Intenta de nuevo más tarde.', 'error');
                 }
-            } else {
-                // Si no hay usuario logueado en sessionStorage (ej. acceso directo a index_app.html sin login),
-                // ocultamos la sección de Información por seguridad y vamos a Inicio.
-                infoSection.style.display = 'none';
-                console.log('No hay usuario logueado en sessionStorage. Sección "Información" oculta y se carga Inicio.');
-                initialTabToLoad = 'inicio';
-                // Opcional: redirigir a la página de login si no hay sesión activa
-                // window.location.href = './index.html';
+
+            } else { // Modo 'display'
+                passwordDisplayModal.style.display = 'none';
+                recoveryModal.style.display = 'none';
             }
-
-            // Remover la clase 'active' de todas las pestañas iniciales
-            document.querySelectorAll('.sidebar ul li.active').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Encontrar y añadir la clase 'active' a la pestaña que debe cargarse inicialmente
-            const targetLink = document.querySelector(`.sidebar ul li a[data-tab="${initialTabToLoad}"]`);
-            if (targetLink) {
-                targetLink.parentElement.classList.add('active');
-            }
-
-            // Renderizar el contenido de la pestaña inicial
-            renderContent(initialTabToLoad);
-            setSectionMaxHeight(); // Establece la altura correcta para las secciones expandidas al cargar
         });
 
-        // Ajustar el max-height de las secciones expandidas al redimensionar la ventana
-        window.addEventListener('resize', setSectionMaxHeight);
+        // Lógica de Recuperación de Contraseña (mostrar existente)
+        recoverPasswordButton.addEventListener('click', async () => {
+            const username = recoveryUsernameInput.value.trim();
+            const idx = recoveryIdxInput.value.trim();
 
-        // Lógica para el botón de cerrar sesión
-        logoutSectionHeader.addEventListener('click', () => {
-            sessionStorage.clear(); // Limpia todos los datos de sesión almacenados
-            window.location.href = './index.html'; // Redirige al usuario a la página de inicio de sesión
+            if (!username || !idx) {
+                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Cédula de Identidad.', 'error');
+                return;
+            }
+
+            showMessage(recoveryMessageContainer, 'Buscando contraseña existente...', 'info');
+
+            try {
+                // Modificado: Enviar 'action: recoverPassword' en el body para doPost, o como parámetro para doGet
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=recoverPassword&username=${encodeURIComponent(username)}&idx=${encodeURIComponent(idx)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showPasswordDisplayModal(data.password, 'Tu Contraseña Existente', 'display');
+                    showMessage(recoveryMessageContainer, 'Contraseña recuperada con éxito.', 'success');
+                } else {
+                    showMessage(recoveryMessageContainer, data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error al recuperar contraseña:', error);
+                showMessage(recoveryMessageContainer, 'Error de conexión. Intenta de nuevo más tarde.', 'error');
+            }
+        });
+
+        // Lógica para Generar Nueva Contraseña Automáticamente
+        generateAutoPasswordButton.addEventListener('click', async () => {
+            const username = recoveryUsernameInput.value.trim();
+            const idx = recoveryIdxInput.value.trim();
+
+            if (!username || !idx) {
+                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Cédula de Identidad para generar una nueva clave.', 'error');
+                return;
+            }
+
+            showMessage(recoveryMessageContainer, 'Generando y actualizando nueva contraseña automáticamente...', 'info');
+
+            try {
+                // Modificado: Enviar 'action: generatePassword' en el body para doPost, o como parámetro para doGet
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=generatePassword&username=${encodeURIComponent(username)}&idx=${encodeURIComponent(idx)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showPasswordDisplayModal(data.password, 'Tu Nueva Contraseña Generada', 'display');
+                    showMessage(recoveryMessageContainer, 'Nueva contraseña generada y actualizada con éxito.', 'success');
+                } else {
+                    showMessage(recoveryMessageContainer, data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error al generar nueva contraseña:', error);
+                showMessage(recoveryMessageContainer, 'Error de conexión. Intenta de nuevo más tarde.', 'error');
+            }
+        });
+
+        // Lógica para Ingresar Contraseña Manualmente
+        manualPasswordButton.addEventListener('click', () => {
+            const username = recoveryUsernameInput.value.trim();
+            const idx = recoveryIdxInput.value.trim();
+
+            if (!username || !idx) {
+                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Cédula de Identidad para establecer una clave manual.', 'error');
+                return;
+            }
+            // Abre el modal de contraseña en modo de entrada manual
+            showPasswordDisplayModal('', 'Contraseña Manual', 'manual_input');
+            // Limpia el mensaje de recuperación si lo hay
+            recoveryMessageContainer.classList.add('hidden');
+        });
+
+        // Navegación al formulario de registro
+        showRegisterFormBtn.addEventListener('click', () => {
+            window.location.href = './register.html';
+        });
+        
+        // Lógica para mostrar/ocultar contraseña
+        togglePassword.addEventListener('click', () => {
+            const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            loginPasswordInput.setAttribute('type', type);
+
+            // Cambiar el icono
+            if (type === 'password') {
+                togglePassword.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                `;
+            } else {
+                togglePassword.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.988 5.844A1.352 1.352 0 003 6.35c0 .487.33 1.17.644 1.745 1.405 2.81 4.287 4.857 7.55 4.857 1.037 0 2.05-.173 2.99-.483m0 0l-1.545 1.545m1.545-1.545L21 18.275m-8.73-3.008l-1.545 1.545m1.545-1.545L12 12m-3.172 1.828l-1.545 1.545m1.545-1.545L3.988 5.844zM12 12a3 3 0 100-6 3 3 0 000 6z" />
+                    </svg>
+                `;
+            }
         });
     </script>
 </body>
