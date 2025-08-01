@@ -145,8 +145,8 @@
             border: none;
             color: #ecf0f1;
             font-size: 20px; /* Tamaño fijo para el ícono */
-            width: 20px; /* Ancho fijo para el botón */
-            height: 5px; /* Alto fijo para el botón */
+            width: 30px; /* Ancho fijo para el botón */
+            height: 30px; /* Alto fijo para el botón */
             display: flex; /* Usar flexbox para centrar el ícono */
             align-items: center; /* Centrar verticalmente */
             justify-content: center; /* Centrar horizontalmente */
@@ -402,6 +402,8 @@
     <main id="mainContent" class="main-content">
         <!-- El contenido se cargará aquí dinámicamente -->
         <p class="text-gray-600">Cargando contenido...</p>
+        <!-- Nuevo elemento para mostrar el nombre de usuario -->
+        <div id="welcomeMessage" class="mt-4 text-lg font-semibold text-gray-700"></div>
     </main>
 
     <script>
@@ -494,6 +496,8 @@
                     mainContent.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible localmente.</p>`;
                 }
             }
+            // Después de cargar el contenido, mostrar el mensaje de bienvenida
+            displayWelcomeMessage();
         }
 
         // Obtener referencias a los elementos del DOM
@@ -504,6 +508,26 @@
         const sectionToggles = document.querySelectorAll('.sidebar-section .section-toggle'); // Botones de alternar de las secciones
         const logoutSectionHeader = document.getElementById('logoutSectionHeader'); // Referencia al encabezado de la sección de cerrar sesión
         const infoSection = document.getElementById('infoSection'); // Referencia a la sección de Información
+        const welcomeMessageDiv = document.getElementById('welcomeMessage'); // Nuevo: Referencia al div del mensaje de bienvenida
+
+        // Función para mostrar el mensaje de bienvenida con el nombre del usuario
+        function displayWelcomeMessage() {
+            const loggedInUserString = sessionStorage.getItem('loggedInUser');
+            if (loggedInUserString) {
+                try {
+                    const loggedInUser = JSON.parse(loggedInUserString);
+                    // Asumiendo que el nombre de usuario está en 'username' o 'nombreCliente'
+                    const userName = loggedInUser.username || loggedInUser.nombreCliente || 'Usuario';
+                    welcomeMessageDiv.textContent = `¡Hola, ${userName}!`;
+                    welcomeMessageDiv.classList.remove('hidden'); // Asegurarse de que sea visible
+                } catch (e) {
+                    console.error('Error al parsear loggedInUser de sessionStorage para el mensaje de bienvenida:', e);
+                    welcomeMessageDiv.classList.add('hidden'); // Ocultar si hay error
+                }
+            } else {
+                welcomeMessageDiv.classList.add('hidden'); // Ocultar si no hay usuario logueado
+            }
+        }
 
         // Función para alternar el estado expandido/colapsado del sidebar principal
         sidebarToggle.addEventListener('click', () => {
