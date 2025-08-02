@@ -308,7 +308,7 @@
                         Cliente_Data_Reg: formatDateTime(new Date()),
                         // TODO: Asegúrate de que el perfil del usuario venga de la respuesta de Google Apps Script (data.user.profile).
                         // Para demostración, si no viene del backend, se asume 'Admin'.
-                        profile: data.user.profile || 'Admin' 
+                        profile: data.user.profile 
                     };sessionStorage.setItem('loggedInUser', JSON.stringify(loggedInUserWithTimestamp))
                     ;
                     
