@@ -607,7 +607,7 @@
                     const loggedInUser = JSON.parse(loggedInUserString);
 
                     // Lógica para mostrar/ocultar la sección de Información basada en el perfil del usuario
-                    if (loggedInUser.profile !== 'Admin') {
+                    if (loggedInUser.profile !== 'Cliente') {
                         infoSection.style.display = 'none';
                         console.log('Sección "Información" oculta para usuarios no-Admin.');
                         // Si no es Admin, redirigir a la pestaña 'inicio'
