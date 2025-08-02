@@ -242,7 +242,7 @@
             border-bottom: 5px solid #2980b9; /* Añade un borde inferior como indicador */
         }
 
-        /* Estilos para el contenido principal de la página */
+        /* Estilos para el contenedor principal de contenido */
         .main-content {
             margin-left: 250px; /* Deja espacio a la izquierda para el sidebar fijo */
             padding: 20px; /* Espaciado interno */
@@ -251,10 +251,18 @@
             min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
             box-shadow: inset 5px 0 10px -5px rgba(0, 0, 0, 0.05); /* Sombra sutil al borde del contenido */
             transition: margin-left 0.3s ease; /* Transición suave para el margen */
+            display: flex; /* Usar flexbox para organizar header y content-area */
+            flex-direction: column;
         }
 
         .main-content.shifted {
             margin-left: 80px; /* Ajusta el margen cuando el sidebar está colapsado */
+        }
+
+        /* Estilos para el área de contenido dinámico */
+        .content-area {
+            flex-grow: 1; /* Permite que el área de contenido ocupe el espacio restante */
+            padding-top: 20px; /* Espacio entre el mensaje de bienvenida y el contenido de la pestaña */
         }
 
         /* Media queries para responsividad (ajustado para mostrar texto por defecto en móvil) */
@@ -393,17 +401,20 @@
         <!-- Esta sección tendrá la misma apariencia de encabezado que las otras secciones -->
         <div class="sidebar-section mt-auto">
             <div class="section-header" id="logoutSectionHeader">
-                <h3><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></h3>
+                <h3><i class="fas fa-sign-out-alt"></i> <span id="logoutUserName">Cerrar Sesión</span></h3> <!-- Añadido ID al span -->
                 <!-- No hay botón de alternar para esta sección, ya que es una acción directa -->
             </div>
         </div>
     </aside>
 
     <main id="mainContent" class="main-content">
-        <!-- El contenido se cargará aquí dinámicamente -->
-        <p class="text-gray-600">Cargando contenido...</p>
-        <!-- Nuevo elemento para mostrar el nombre de usuario -->
-        <div id="welcomeMessage" class="mt-4 text-lg font-semibold text-gray-700"></div>
+        <!-- Área persistente para el mensaje de bienvenida -->
+        <div id="welcomeMessage" class="mb-4 text-2xl font-bold text-gray-800"></div>
+        
+        <!-- Área donde se cargará el contenido dinámico de las pestañas -->
+        <div id="contentArea" class="content-area">
+            <p class="text-gray-600">Cargando contenido...</p>
+        </div>
     </main>
 
     <script>
@@ -460,9 +471,12 @@
             }
         }
 
+        // Obtener referencia al área de contenido dinámico
+        const contentArea = document.getElementById('contentArea');
+
         // Función unificada para renderizar el contenido de cualquier pestaña
         async function renderContent(tabId) {
-            mainContent.innerHTML = '<p class="text-gray-600">Cargando contenido...</p>'; // Mostrar mensaje de carga
+            contentArea.innerHTML = '<p class="text-gray-600">Cargando contenido...</p>'; // Mostrar mensaje de carga en el área de contenido
 
             // Limpiar estilos inyectados previamente de Google Docs
             const gasStylesTag = document.getElementById('gas-injected-styles');
@@ -475,7 +489,7 @@
                 const content = allContent[tabId];
 
                 if (content && content.rawHtml) {
-                    mainContent.innerHTML = content.rawHtml; // Inyectar el HTML directamente
+                    contentArea.innerHTML = content.rawHtml; // Inyectar el HTML directamente en el contentArea
 
                     // Inyectar estilos CSS extraídos de Google Docs si existen
                     let currentGasStylesTag = document.createElement('style');
@@ -486,29 +500,28 @@
                         currentGasStylesTag.innerHTML = content.extractedCss;
                     }
                 } else {
-                    mainContent.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible desde Google Docs.</p>`;
+                    contentArea.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible desde Google Docs.</p>`;
                 }
             } else { // Si la pestaña es de la sección "Aplicación" (datos locales)
                 const content = localTabContent[tabId];
                 if (content) {
-                    mainContent.innerHTML = `<h1>${content.title}</h1><p>${content.text}</p>`;
+                    contentArea.innerHTML = `<h1>${content.title}</h1><p>${content.text}</p>`;
                 } else {
-                    mainContent.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible localmente.</p>`;
+                    contentArea.innerHTML = `<p class="text-red-500">Contenido de ${tabId} no disponible localmente.</p>`;
                 }
             }
-            // Después de cargar el contenido, mostrar el mensaje de bienvenida
-            displayWelcomeMessage();
         }
 
         // Obtener referencias a los elementos del DOM
         const sidebar = document.getElementById('mySidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarLinks = document.querySelectorAll('.sidebar ul li a'); // Todos los enlaces de pestañas
-        const sectionToggles = document.querySelectorAll('.sidebar-section .section-toggle'); // Botones de alternar de las secciones
-        const logoutSectionHeader = document.getElementById('logoutSectionHeader'); // Referencia al encabezado de la sección de cerrar sesión
-        const infoSection = document.getElementById('infoSection'); // Referencia a la sección de Información
-        const welcomeMessageDiv = document.getElementById('welcomeMessage'); // Nuevo: Referencia al div del mensaje de bienvenida
+        const mainContent = document.getElementById('mainContent'); 
+        const sidebarLinks = document.querySelectorAll('.sidebar ul li a'); 
+        const sectionToggles = document.querySelectorAll('.sidebar-section .section-toggle'); 
+        const logoutSectionHeader = document.getElementById('logoutSectionHeader'); 
+        const infoSection = document.getElementById('infoSection'); 
+        const welcomeMessageDiv = document.getElementById('welcomeMessage'); 
+        const logoutUserNameSpan = document.getElementById('logoutUserName'); // Nuevo: Referencia al span dentro del botón de cerrar sesión
 
         // Función para mostrar el mensaje de bienvenida con el nombre del usuario
         function displayWelcomeMessage() {
@@ -516,41 +529,54 @@
             if (loggedInUserString) {
                 try {
                     const loggedInUser = JSON.parse(loggedInUserString);
-                    // Asumiendo que el nombre de usuario está en 'username' o 'nombreCliente'
-                    const userName = loggedInUser.username || loggedInUser.nombreCliente || 'Usuario';
+                    // Asumiendo que el nombre de usuario está en 'username' o 'Cliente_Nombre'
+                    const userName = loggedInUser.username || loggedInUser.Cliente_Nombre || 'Usuario';
                     welcomeMessageDiv.textContent = `¡Hola, ${userName}!`;
-                    welcomeMessageDiv.classList.remove('hidden'); // Asegurarse de que sea visible
+                    welcomeMessageDiv.classList.remove('hidden'); 
                 } catch (e) {
                     console.error('Error al parsear loggedInUser de sessionStorage para el mensaje de bienvenida:', e);
-                    welcomeMessageDiv.classList.add('hidden'); // Ocultar si hay error
+                    welcomeMessageDiv.classList.add('hidden'); 
                 }
             } else {
-                welcomeMessageDiv.classList.add('hidden'); // Ocultar si no hay usuario logueado
+                welcomeMessageDiv.classList.add('hidden'); 
+            }
+        }
+
+        // Función para actualizar el texto del botón de cerrar sesión con el nombre del usuario
+        function updateLogoutButtonText() {
+            const loggedInUserString = sessionStorage.getItem('loggedInUser');
+            if (loggedInUserString) {
+                try {
+                    const loggedInUser = JSON.parse(loggedInUserString);
+                    const userName = loggedInUser.username || loggedInUser.Cliente_Nombre || 'Usuario';
+                    logoutUserNameSpan.textContent = `Cerrar Sesión (${userName})`;
+                } catch (e) {
+                    console.error('Error al parsear loggedInUser de sessionStorage para el botón de cerrar sesión:', e);
+                    logoutUserNameSpan.textContent = 'Cerrar Sesión'; // Volver al texto por defecto en caso de error
+                }
+            } else {
+                logoutUserNameSpan.textContent = 'Cerrar Sesión'; // Volver al texto por defecto si no hay usuario
             }
         }
 
         // Función para alternar el estado expandido/colapsado del sidebar principal
         sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed'); // Alterna la clase 'collapsed' en el sidebar
-            mainContent.classList.toggle('shifted'); // Alterna la clase 'shifted' en el contenido principal
-            // Ajusta el max-height de las secciones expandidas al colapsar/expandir el sidebar principal
+            sidebar.classList.toggle('collapsed'); 
+            mainContent.classList.toggle('shifted'); 
             setSectionMaxHeight();
         });
 
         // Función para manejar la pestaña activa al hacer clic y cargar su contenido
         sidebarLinks.forEach(link => {
             link.addEventListener('click', (event) => {
-                event.preventDefault(); // Evita el comportamiento por defecto del enlace (navegar)
+                event.preventDefault(); 
 
-                // Remover la clase 'active' de todas las pestañas
                 document.querySelectorAll('.sidebar ul li').forEach(item => {
                     item.classList.remove('active');
                 });
 
-                // Añadir la clase 'active' a la pestaña clicada
                 link.parentElement.classList.add('active');
 
-                // Cargar el contenido de la pestaña usando la función unificada
                 const tabName = link.dataset.tab;
                 renderContent(tabName);
             });
@@ -559,28 +585,25 @@
         // Función para alternar el estado expandido/colapsado de las secciones internas
         sectionToggles.forEach(button => {
             button.addEventListener('click', () => {
-                const sectionContent = button.closest('.section-header').nextElementSibling; // La lista ul.section-content
+                const sectionContent = button.closest('.section-header').nextElementSibling; 
                 const icon = button.querySelector('i');
 
                 if (sectionContent.classList.contains('expanded')) {
-                    // Si está expandido, lo colapsamos
-                    sectionContent.style.maxHeight = sectionContent.scrollHeight + 'px'; // Establece la altura actual
+                    sectionContent.style.maxHeight = sectionContent.scrollHeight + 'px'; 
                     setTimeout(() => {
-                        sectionContent.style.maxHeight = '0'; // Luego colapsa a 0
+                        sectionContent.style.maxHeight = '0'; 
                         sectionContent.classList.remove('expanded');
-                    }, 10); // Pequeño retraso para permitir la transición
+                    }, 10); 
                     icon.classList.remove('fa-chevron-up');
                     icon.classList.add('fa-chevron-down');
                 } else {
-                    // Si está colapsado, lo expandimos
-                    sectionContent.style.maxHeight = sectionContent.scrollHeight + 'px'; // Expande a la altura completa
+                    sectionContent.style.maxHeight = sectionContent.scrollHeight + 'px'; 
                     sectionContent.classList.add('expanded');
                     icon.classList.remove('fa-chevron-down');
                     icon.classList.add('fa-chevron-up');
-                    // Una vez que la transición termine, podemos quitar el max-height para contenido dinámico
                     sectionContent.addEventListener('transitionend', function handler() {
                         if (sectionContent.classList.contains('expanded')) {
-                            sectionContent.style.maxHeight = 'none'; // Permite que el contenido se ajuste libremente
+                            sectionContent.style.maxHeight = 'none'; 
                         }
                         sectionContent.removeEventListener('transitionend', handler);
                     });
@@ -591,7 +614,7 @@
         // Función para establecer el max-height inicial de las secciones expandidas
         function setSectionMaxHeight() {
             document.querySelectorAll('.sidebar-section .section-content.expanded').forEach(content => {
-                content.style.maxHeight = 'none'; // Temporalmente para obtener el scrollHeight correcto
+                content.style.maxHeight = 'none'; 
                 content.style.maxHeight = content.scrollHeight + 'px';
             });
         }
@@ -599,55 +622,48 @@
         // Cargar el contenido de la primera pestaña al cargar la página por primera vez
         // y establecer las alturas iniciales de las secciones
         document.addEventListener('DOMContentLoaded', () => {
-            let initialTabToLoad = 'tab6'; // Pestaña por defecto si no se especifica un perfil o es Admin
+            let initialTabToLoad = 'tab6'; 
 
             const loggedInUserString = sessionStorage.getItem('loggedInUser');
             if (loggedInUserString) {
                 try {
                     const loggedInUser = JSON.parse(loggedInUserString);
 
-                    // Lógica para mostrar/ocultar la sección de Información basada en el perfil del usuario
                     if (loggedInUser.profile !== 'Admin') {
                         infoSection.style.display = 'none';
                         console.log('Sección "Información" oculta para usuarios no-Admin.');
-                        // Si no es Admin, redirigir a la pestaña 'inicio'
                         initialTabToLoad = 'inicio';
                     } else {
-                        infoSection.style.display = 'block'; // Asegura que sea visible si es Admin
+                        infoSection.style.display = 'block'; 
                         console.log('Sección "Información" visible para Admin.');
-                        // Si es Admin, mantener la pestaña por defecto (Dashbord, tab6)
                         initialTabToLoad = 'tab6';
                     }
                 } catch (e) {
                     console.error('Error al parsear loggedInUser de sessionStorage:', e);
-                    // En caso de error al parsear, por seguridad, ocultamos la sección y vamos a Inicio.
                     infoSection.style.display = 'none';
                     initialTabToLoad = 'inicio';
                 }
             } else {
-                // Si no hay usuario logueado en sessionStorage (ej. acceso directo a index_app.html sin login),
-                // ocultamos la sección de Información por seguridad y vamos a Inicio.
                 infoSection.style.display = 'none';
                 console.log('No hay usuario logueado en sessionStorage. Sección "Información" oculta y se carga Inicio.');
                 initialTabToLoad = 'inicio';
-                // Opcional: redirigir a la página de login si no hay sesión activa
-                // window.location.href = './index.html';
             }
 
-            // Remover la clase 'active' de todas las pestañas iniciales
             document.querySelectorAll('.sidebar ul li.active').forEach(item => {
                 item.classList.remove('active');
             });
 
-            // Encontrar y añadir la clase 'active' a la pestaña que debe cargarse inicialmente
             const targetLink = document.querySelector(`.sidebar ul li a[data-tab="${initialTabToLoad}"]`);
             if (targetLink) {
                 targetLink.parentElement.classList.add('active');
             }
 
-            // Renderizar el contenido de la pestaña inicial
             renderContent(initialTabToLoad);
-            setSectionMaxHeight(); // Establece la altura correcta para las secciones expandidas al cargar
+            setSectionMaxHeight(); 
+
+            // Llama a displayWelcomeMessage() y updateLogoutButtonText() una vez al cargar la página
+            displayWelcomeMessage(); 
+            updateLogoutButtonText(); // Llamada a la nueva función
         });
 
         // Ajustar el max-height de las secciones expandidas al redimensionar la ventana
@@ -655,8 +671,8 @@
 
         // Lógica para el botón de cerrar sesión
         logoutSectionHeader.addEventListener('click', () => {
-            sessionStorage.clear(); // Limpia todos los datos de sesión almacenados
-            window.location.href = './index.html'; // Redirige al usuario a la página de inicio de sesión
+            sessionStorage.clear(); 
+            window.location.href = './index.html'; 
         });
     </script>
 </body>
