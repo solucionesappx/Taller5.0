@@ -37,7 +37,11 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
     <div class="w-full max-w-3xl mx-auto">
         <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-gray-100">
-            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">Registrar Servicios de Taller</h1>
+            <!-- Título y mensaje de bienvenida -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-4xl font-extrabold text-gray-900">Registrar Servicios</h1>
+                <p id="welcome-message" class="text-lg font-semibold text-gray-700"></p>
+            </div>
             
             <!-- Botones de navegación -->
             <div class="flex justify-start mb-8">
@@ -246,6 +250,8 @@
         const generatePdfButton = document.getElementById('generate-pdf-button');
         const backToMenuButton = document.getElementById('back-to-menu-button');
         const logoutButton = document.getElementById('logout-button');
+        const welcomeMessage = document.getElementById('welcome-message');
+
 
         // --- Funciones para manejar el catálogo de servicios y el carrito ---
         
@@ -404,7 +410,7 @@
             showResult('Enviando orden...', 'info');
 
             try {
-                const response = await fetch(SCRIPT_URL, {
+                const response = await fetch(scriptURL, {
                     method: 'POST',
                     redirect: 'follow', // Necesario para Google Apps Script
                     headers: {
@@ -512,17 +518,26 @@
 
         // --- Inicialización al cargar la página ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Verificar si el usuario está logueado
             const userString = sessionStorage.getItem('loggedInUser');
             if (!userString) {
+                // Si no hay usuario logueado, redirigir al login
                 window.location.href = 'index.html';
                 return;
             }
-            loggedInUser = JSON.parse(userString);
             
-            // Rellenar selectores y renderizar el carrito
-            populateSections();
-            renderCartTable();
+            try {
+                loggedInUser = JSON.parse(userString);
+                // Si los datos son válidos, muestra el mensaje de bienvenida
+                welcomeMessage.textContent = `Bienvenido, ${loggedInUser.Cliente_Nombre}`;
+                
+                // Rellenar selectores y renderizar el carrito
+                populateSections();
+                renderCartTable();
+            } catch (e) {
+                console.error('Error al parsear los datos del usuario de sessionStorage:', e);
+                sessionStorage.clear(); // Limpiar datos corruptos
+                window.location.href = 'index.html';
+            }
         });
 
         // Event Listeners
