@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Servicios de Taller</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Enlace a Font Awesome para los íconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Librerías para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .btn-animation { transition: all 0.2s ease-in-out; }
+        .btn-animation:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        .input-focus-animation:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); z-index: 999; }
+        .modal-content { z-index: 1000; transform: translateY(-20px); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; }
+        .modal-content.show { transform: translateY(0); opacity: 1; }
+        .hidden { display: none !important; }
+
+        /* Oculta los botones de spinner para input type="number" */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] { 
+            -moz-appearance: textfield; /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-3xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-gray-100">
+            <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-3">Registrar Servicios de Taller</h1>
+            
+            <!-- Botones de navegación -->
+            <div class="flex justify-start mb-8">
+                <button id="back-to-menu-button" class="btn-animation py-2 px-4 rounded-xl font-semibold bg-gray-200 text-gray-800 shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">Regresar al Menú</button>
+                <button id="logout-button" class="btn-animation py-2 px-4 rounded-xl font-semibold bg-red-500 text-white shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 ml-auto">Cerrar Sesión</button>
+            </div>
+
+            <!-- Formulario de Selección de Servicios -->
+            <form id="serviceSelectionForm">
+                <!-- Sección para la selección del servicio -->
+                <div class="mb-5 rounded-xl shadow-sm border border-gray-200 bg-white p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Detalles del Servicio</h2>
+                    <div class="space-y-5">
+                        <div>
+                            <label for="service-type-select" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Orden</label>
+                            <select id="service-type-select" class="input-focus-animation mt-1 block w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-800">
+                                <option value="">Selecciona tipo de servicio</option>
+                                <option value="Suministro Repuestos">Suministro Repuestos</option>
+                                <option value="Mantenimiento o Reparación">Mantenimiento o Reparación</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="section-select" class="block text-sm font-medium text-gray-700 mb-1">Sección</label>
+                            <select id="section-select" class="input-focus-animation mt-1 block w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-800" disabled>
+                                <option value="">Selecciona una sección</option>
+                            </select>
+                            <input type="text" id="other-section-input" class="input-focus-animation mt-2 hidden w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-800" placeholder="Escribe la otra sección">
+                        </div>
+                        <div>
+                            <label for="component-input" class="block text-sm font-medium text-gray-700 mb-1">Componente</label>
+                            <input type="text" id="component-input" class="input-focus-animation mt-1 block w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-800" placeholder="Indicar componente">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="includes-spare-part-checkbox" class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <label for="includes-spare-part-checkbox" class="ml-2 text-sm font-medium text-gray-700">Incluye repuesto</label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="cost-input" class="block text-sm font-medium text-gray-700 mb-1">Costo</label>
+                                <input type="number" id="cost-input" value="0.00" min="0" step="0.01" class="input-focus-animation mt-1 block w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-800">
+                            </div>
+                            <div>
+                                <label for="currency-display" class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
+                                <div id="currency-display" class="input-focus-animation mt-1 block w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg shadow-sm text-gray-800 pointer-events-none">USD</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                            <div class="flex items-center mt-1">
+                                <button type="button" id="quantity-decrement-button" class="btn-animation w-10 h-10 flex items-center justify-center border border-gray-300 rounded-l-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="text" id="quantity-input" value="1" readonly class="input-focus-animation w-16 h-10 text-center border-t border-b border-gray-300 bg-white text-gray-800 focus:outline-none">
+                                <button type="button" id="quantity-increment-button" class="btn-animation w-10 h-10 flex items-center justify-center border border-gray-300 rounded-r-lg bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-to-cart-button" class="btn-animation w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Añadir al Carrito
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-5 rounded-xl shadow-sm border border-gray-200 bg-white p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mt-6 mb-3">Detalle de la Orden:</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-100 border-b border-gray-200">
+                                <tr>
+                                    <th class="py-2 px-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider rounded-tl-lg">#</th>
+                                    <th class="py-2 px-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Descripción</th>
+                                    <th class="py-2 px-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Costo</th>
+                                    <th class="py-2 px-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">QTY</th>
+                                    <th class="py-2 px-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Total</th>
+                                    <th class="py-2 px-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider rounded-tr-lg">💀</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cart-table-body">
+                                <!-- Los servicios del carrito se insertarán aquí con JavaScript -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-gray-50 border-t border-gray-300">
+                                    <td colspan="3" class="py-2 px-3 text-right text-sm font-bold text-gray-800">Totales:</td>
+                                    <td class="py-2 px-3 text-right text-sm font-bold text-gray-800" id="cart-total-quantity">0</td>
+                                    <td class="py-2 px-3 text-right text-sm font-bold text-gray-800" id="cart-total-cost">0.00</td>
+                                    <td class="py-2 px-3"></td> <!-- Celda vacía para la columna de eliminar -->
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="cart-message-container" class="mt-4 text-center p-3 rounded-lg hidden border"></div>
+                </div>
+
+                <button type="submit" class="btn-animation w-full mt-8 flex items-center justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Registrar Orden
+                </button>
+            </form>
+
+            <!-- Área para mostrar mensajes y resultados del formulario de registro -->
+            <div id="result-container" class="mt-8 text-center p-4 rounded-xl transition-all duration-300 ease-in-out"></div>
+        </div>
+    </div>
+
+    <!-- Estructura del Modal (Pop-up) para registro/pedido exitoso -->
+    <div id="registration-modal" class="fixed inset-0 flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full modal-content">
+            <h3 class="text-2xl font-bold text-green-700 text-center mb-4" id="modal-title"></h3>
+            <p class="text-gray-700 text-center mb-4" id="modal-message"></p>
+            <div id="modal-content-details" class="text-left bg-green-50 text-green-800 p-4 rounded-lg space-y-2 mb-6">
+                <!-- Los detalles del registro se insertarán aquí por JavaScript -->
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button type="button" id="generate-pdf-button" class="btn-animation w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    PDF 🏷️
+                </button>
+                <button type="button" onclick="handleAcceptRegistration()" class="btn-animation w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Función para generar un UUID v4
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0,
+                    v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Simulación de datos del catálogo de servicios (Mock data)
+        const CATALOG_SERVICES = {
+            "Suministro Repuestos": [
+                "Calefacción y Aire Acondicionado",
+                "Combustible y Aire",
+                "Correa de Transmisión",
+                "Dirección",
+                "Eléctrico",
+                "Eléctrico-Interruptor y Relé",
+                "Encendido",
+                "Escapes y Emisiones",
+                "Freno y Maza de Rueda",
+                "Motor",
+                "Rueda",
+                "Sistema de Enfriamiento",
+                "Suspensión",
+                "Transmisión-Automática",
+                "Otro..."
+            ],
+            "Mantenimiento o Reparación": [
+                "Calefacción y Aire Acondicionado",
+                "Combustible y Aire",
+                "Correa de Transmisión",
+                "Dirección",
+                "Eléctrico",
+                "Eléctrico-Interruptor y Relé",
+                "Encendido",
+                "Escapes y Emisiones",
+                "Freno y Maza de Rueda",
+                "Interior",
+                "Limpiaparabrisas",
+                "Motor",
+                "Rueda",
+                "Sistema de Enfriamiento",
+                "Suspensión",
+                "Transmisión-Automática",
+                "Otro..."
+            ]
+        };
+
+        // URL del script de Google Apps
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1gT9m1cQ6_k9rK3c8_7JgY4M_d5d0J0z0/exec'; // ¡REEMPLAZA ESTO CON TU URL REAL!
+
+        // Variables globales
+        let loggedInUser = null;
+        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        let orderId = sessionStorage.getItem('orderId') || null;
+
+        // Referencias a elementos del DOM
+        const serviceTypeSelect = document.getElementById('service-type-select');
+        const sectionSelect = document.getElementById('section-select');
+        const otherSectionInput = document.getElementById('other-section-input');
+        const componentInput = document.getElementById('component-input');
+        const includesSparePartCheckbox = document.getElementById('includes-spare-part-checkbox');
+        const costInput = document.getElementById('cost-input');
+        const currencyDisplay = document.getElementById('currency-display');
+        const quantityInput = document.getElementById('quantity-input');
+        const quantityDecrementButton = document.getElementById('quantity-decrement-button');
+        const quantityIncrementButton = document.getElementById('quantity-increment-button');
+        const addToCartButton = document.getElementById('add-to-cart-button');
+        const cartTableBody = document.getElementById('cart-table-body');
+        const cartTotalQuantityElem = document.getElementById('cart-total-quantity');
+        const cartTotalCostElem = document.getElementById('cart-total-cost');
+        const cartMessageContainer = document.getElementById('cart-message-container');
+        const serviceSelectionForm = document.getElementById('serviceSelectionForm');
+        const resultContainer = document.getElementById('result-container');
+        const registrationModal = document.getElementById('registration-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalContentDetails = document.getElementById('modal-content-details');
+        const generatePdfButton = document.getElementById('generate-pdf-button');
+        const backToMenuButton = document.getElementById('back-to-menu-button');
+        const logoutButton = document.getElementById('logout-button');
+
+        // --- Funciones para manejar el catálogo de servicios y el carrito ---
+        
+        /**
+         * Rellena el selector de secciones basado en el tipo de servicio seleccionado.
+         */
+        function populateSections() {
+            sectionSelect.innerHTML = '<option value="">Selecciona una sección</option>';
+            const selectedServiceType = serviceTypeSelect.value;
+            otherSectionInput.classList.add('hidden');
+            sectionSelect.disabled = !selectedServiceType;
+
+            if (selectedServiceType && CATALOG_SERVICES[selectedServiceType]) {
+                CATALOG_SERVICES[selectedServiceType].forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = section;
+                    sectionSelect.appendChild(option);
+                });
+            }
+        }
+
+        /**
+         * Maneja el cambio en el selector de secciones para mostrar el campo "Otro..."
+         */
+        function handleSectionChange() {
+            if (sectionSelect.value === 'Otro...') {
+                otherSectionInput.classList.remove('hidden');
+            } else {
+                otherSectionInput.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Renderiza la tabla del carrito con los servicios actuales.
+         */
+        function renderCartTable() {
+            cartTableBody.innerHTML = '';
+            let totalQuantity = 0;
+            let totalCost = 0;
+
+            if (cart.length === 0) {
+                cartTableBody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-gray-500">El carrito de servicios está vacío.</td></tr>';
+            } else {
+                cart.forEach((item, index) => {
+                    const newRow = document.createElement('tr');
+                    newRow.className = 'border-b last:border-b-0 border-gray-100 hover:bg-gray-50';
+                    const description = `${item.TipoServicio}: ${item.Seccion} - ${item.Componente} (${item.IncluyeRepuesto})`;
+                    const itemTotalCost = item.Costo * item.Cantidad;
+                    newRow.innerHTML = `
+                        <td class="py-3 px-3 text-left text-sm text-gray-700">${index + 1}</td>
+                        <td class="py-3 px-3 text-left text-sm text-gray-700">${description}</td>
+                        <td class="py-3 px-3 text-right text-sm text-gray-700">${item.Moneda} ${item.Costo.toFixed(2)}</td>
+                        <td class="py-3 px-3 text-right text-sm text-gray-700">${item.Cantidad}</td>
+                        <td class="py-3 px-3 text-right text-sm text-gray-700">${item.Moneda} ${itemTotalCost.toFixed(2)}</td>
+                        <td class="py-3 px-3 text-center">
+                            <button type="button" class="text-red-500 hover:text-red-700 transition" onclick="removeItem(${index})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    cartTableBody.appendChild(newRow);
+                    totalQuantity += item.Cantidad;
+                    totalCost += itemTotalCost;
+                });
+            }
+
+            cartTotalQuantityElem.textContent = totalQuantity;
+            cartTotalCostElem.textContent = totalCost.toFixed(2);
+            sessionStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        /**
+         * Añade un servicio al carrito.
+         */
+        function addToCart() {
+            const serviceType = serviceTypeSelect.value;
+            let section = sectionSelect.value;
+            const component = componentInput.value.trim();
+            const includesSparePart = includesSparePartCheckbox.checked ? 'C/Repuesto' : 'S/Repuesto';
+            const cost = parseFloat(costInput.value);
+            const quantity = parseInt(quantityInput.value, 10);
+            const currency = currencyDisplay.textContent;
+
+            // Validaciones
+            if (!serviceType || !section || (section === 'Otro...' && !otherSectionInput.value.trim()) || !component || isNaN(cost) || cost < 0 || quantity <= 0) {
+                showMessage('Por favor, completa todos los campos del servicio y asegúrate de que los valores sean válidos.', 'error');
+                return;
+            }
+            
+            // Usar el valor del campo "Otro..." si aplica
+            if (section === 'Otro...') {
+                section = otherSectionInput.value.trim();
+            }
+
+            const newCartItem = {
+                TipoServicio: serviceType,
+                Seccion: section,
+                Componente: component,
+                IncluyeRepuesto: includesSparePart,
+                Costo: cost,
+                Moneda: currency,
+                Cantidad: quantity
+            };
+
+            // Añade el servicio al carrito
+            cart.push(newCartItem);
+            renderCartTable();
+            showMessage(`Se añadió un servicio de ${section} al carrito.`, 'success');
+            
+            // Limpiar los campos después de añadir al carrito
+            componentInput.value = '';
+            costInput.value = '0.00';
+            quantityInput.value = '1';
+        }
+        
+        /**
+         * Elimina un servicio del carrito por su índice.
+         * @param {number} index El índice del elemento a eliminar.
+         */
+        function removeItem(index) {
+            cart.splice(index, 1);
+            renderCartTable();
+            showMessage('Servicio eliminado del carrito.', 'success');
+        }
+
+        /**
+         * Envía los datos de la orden de servicio al servidor.
+         * @param {Event} e El evento del formulario.
+         */
+        async function submitOrder(e) {
+            e.preventDefault();
+
+            if (cart.length === 0) {
+                showMessage('El carrito está vacío. Añade servicios para registrar una orden.', 'error');
+                return;
+            }
+            
+            // Genera un nuevo orderId si no existe
+            if (!orderId) {
+                orderId = generateUUID();
+                sessionStorage.setItem('orderId', orderId);
+            }
+
+            // Datos para el servidor
+            const orderData = {
+                action: 'registerOrder', // Acción para el script de Google Apps
+                cliente_id: loggedInUser.Cliente_ID,
+                nombre: loggedInUser.Cliente_Nombre,
+                orden_id: orderId,
+                cliente_status: loggedInUser.Cliente_Status,
+                // Serializa el carrito a una cadena JSON para enviarlo
+                productos_seleccionados_carrito: JSON.stringify(cart)
+            };
+
+            showResult('Enviando orden...', 'info');
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    redirect: 'follow', // Necesario para Google Apps Script
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showModal('¡Orden Registrada!', 'La orden de servicio ha sido registrada con éxito.', cart);
+                    showResult('Orden registrada con éxito.', 'success');
+                    // Limpiar el carrito y el ID de orden después de un registro exitoso
+                    cart = [];
+                    sessionStorage.removeItem('cart');
+                    sessionStorage.removeItem('orderId');
+                    renderCartTable();
+                } else {
+                    showResult('Error al registrar la orden: ' + result.message, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showResult('Error de conexión con el servidor. Inténtalo de nuevo.', 'error');
+            }
+        }
+
+        /**
+         * Muestra un mensaje en el contenedor de resultados del formulario.
+         * @param {string} message El mensaje a mostrar.
+         * @param {string} type El tipo de mensaje ('success', 'error', 'info').
+         */
+        function showResult(message, type) {
+            resultContainer.textContent = message;
+            resultContainer.className = `mt-8 text-center p-4 rounded-xl transition-all duration-300 ease-in-out`;
+            if (type === 'success') {
+                resultContainer.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+            } else if (type === 'error') {
+                resultContainer.classList.add('bg-red-100', 'text-red-800', 'border-red-300');
+            } else {
+                resultContainer.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300');
+            }
+        }
+
+        /**
+         * Muestra un mensaje en el contenedor del carrito.
+         * @param {string} message El mensaje a mostrar.
+         * @param {string} type El tipo de mensaje ('success', 'error', 'info').
+         */
+        function showMessage(message, type) {
+            cartMessageContainer.textContent = message;
+            cartMessageContainer.classList.remove('hidden');
+            cartMessageContainer.className = `mt-4 text-center p-3 rounded-lg`;
+            if (type === 'success') {
+                cartMessageContainer.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+            } else if (type === 'error') {
+                cartMessageContainer.classList.add('bg-red-100', 'text-red-800', 'border-red-300');
+            } else {
+                cartMessageContainer.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300');
+            }
+            setTimeout(() => {
+                cartMessageContainer.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Muestra un modal con los detalles de la orden.
+         * @param {string} title Título del modal.
+         * @param {string} message Mensaje del modal.
+         * @param {Array} details Detalles de la orden.
+         */
+        function showModal(title, message, details) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalContentDetails.innerHTML = '';
+            details.forEach(item => {
+                const detailItem = document.createElement('p');
+                detailItem.innerHTML = `<span class="font-semibold">${item.Seccion} - ${item.Componente}</span><br>Costo: ${item.Moneda} ${item.Costo.toFixed(2)} | Cantidad: ${item.Cantidad} | Repuesto: ${item.IncluyeRepuesto}`;
+                modalContentDetails.appendChild(detailItem);
+            });
+            registrationModal.classList.remove('hidden');
+            setTimeout(() => {
+                registrationModal.querySelector('.modal-content').classList.add('show');
+            }, 10);
+        }
+        
+        /**
+         * Genera y descarga un PDF con los detalles de la orden.
+         */
+        window.generatePDF = function() {
+            const modalContent = registrationModal.querySelector('.modal-content');
+            html2canvas(modalContent).then(canvas => {
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`orden_${orderId}.pdf`);
+            });
+        };
+
+        // --- Inicialización al cargar la página ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si el usuario está logueado
+            const userString = sessionStorage.getItem('loggedInUser');
+            if (!userString) {
+                window.location.href = 'index.html';
+                return;
+            }
+            loggedInUser = JSON.parse(userString);
+            
+            // Rellenar selectores y renderizar el carrito
+            populateSections();
+            renderCartTable();
+        });
+
+        // Event Listeners
+        serviceTypeSelect.addEventListener('change', populateSections);
+        sectionSelect.addEventListener('change', handleSectionChange);
+        addToCartButton.addEventListener('click', addToCart);
+        serviceSelectionForm.addEventListener('submit', submitOrder);
+        generatePdfButton.addEventListener('click', window.generatePDF);
+        
+        // Manejadores de los nuevos botones de cantidad
+        quantityDecrementButton.addEventListener('click', () => {
+            let currentQuantity = parseInt(quantityInput.value, 10);
+            if (currentQuantity > 1) {
+                quantityInput.value = currentQuantity - 1;
+            }
+        });
+        
+        quantityIncrementButton.addEventListener('click', () => {
+            let currentQuantity = parseInt(quantityInput.value, 10);
+            quantityInput.value = currentQuantity + 1;
+        });
+
+        // Función global para manejar el botón de aceptar del modal
+        window.handleAcceptRegistration = function() {
+            const modalContent = registrationModal.querySelector('.modal-content');
+            modalContent.classList.remove('show');
+            setTimeout(() => {
+                registrationModal.classList.add('hidden');
+            }, 300);
+        };
+        
+        // Event Listeners para navegación
+        backToMenuButton.addEventListener('click', () => {
+            window.location.href = 'index_app.html';
+        });
+
+        logoutButton.addEventListener('click', () => {
+            sessionStorage.removeItem('loggedInUser');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
