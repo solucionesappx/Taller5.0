@@ -150,7 +150,7 @@
             </div>
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="recovery-idx">
-                    Cédula de Identidad (CI)
+                    Clave IDX Númerica
                 </label>
                 <input
                     type="text"
@@ -391,7 +391,7 @@
             const idx = recoveryIdxInput.value.trim();
 
             if (!username || !idx) {
-                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Cédula de Identidad.', 'error');
+                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Clave IDX Númerica.', 'error');
                 return;
             }
 
@@ -420,7 +420,7 @@
             const idx = recoveryIdxInput.value.trim();
 
             if (!username || !idx) {
-                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Cédula de Identidad para generar una nueva clave.', 'error');
+                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Clave IDX Númerica para generar una nueva clave.', 'error');
                 return;
             }
 
@@ -449,7 +449,7 @@
             const idx = recoveryIdxInput.value.trim();
 
             if (!username || !idx) {
-                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Cédula de Identidad para establecer una clave manual.', 'error');
+                showMessage(recoveryMessageContainer, 'Por favor, ingresa tu nombre de usuario y Clave IDX Númerica para establecer una clave manual.', 'error');
                 return;
             }
             // Abre el modal de contraseña en modo de entrada manual
