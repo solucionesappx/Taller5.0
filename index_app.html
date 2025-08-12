@@ -342,7 +342,7 @@
             <ul class="section-content expanded" id="navegacion-content">
                 <li><a href="#" data-tab="inicio"><i class="fas fa-home"></i><span>Inicio</span></a></li>
                 <li><a href="#" data-tab="vehiculos"><i class="fas fa-car"></i><span>Vehículos</span></a></li>
-                <li><a href="#" data-tab="gestion"><i class="fas fa-clipboard-list"></i><span>Gestión</span></a></li>
+                <li><a href="#" data-tab="ordenes"><i class="fas fa-clipboard-list"></i><span>Órdenes</span></a></li>
             </ul>
         </div>
         
@@ -465,9 +465,11 @@
                 welcomeMessage.textContent = pageTitle;
                 welcomeMessage.classList.remove('hidden');
                 loadVehiculosContent(); // Llama a la nueva función para cargar el contenido
-            } else if (tabId === 'gestion') {
-                pageTitle = 'Gestión';
-                contentArea.innerHTML = `<h2 class="text-xl font-bold mb-4">${pageTitle}</h2><p>Contenido de la sección de Gestión.</p>`;
+            } else if (tabId === 'ordenes') {
+                pageTitle = 'Órdenes';
+                welcomeMessage.textContent = pageTitle;
+                welcomeMessage.classList.remove('hidden');
+                loadCatalogContent(); // Llama a la nueva función para cargar el contenido de órdenes
             } else if (tabId === 'perfil') {
                 pageTitle = 'Mi Perfil';
                 contentArea.innerHTML = `<h2 class="text-xl font-bold mb-4">${pageTitle}</h2><p>Contenido de la sección Mi Perfil.</p>`;
@@ -507,6 +509,35 @@
                 
             } catch (error) {
                 console.error('Error al cargar el contenido de RegVehiculos.html:', error);
+                contentArea.innerHTML = '<p class="text-center text-red-500">Hubo un error al cargar el contenido. Por favor, inténtelo de nuevo.</p>';
+            }
+        };
+
+        // --- Nueva función para cargar el contenido de catalog.html dinámicamente ---
+        const loadCatalogContent = async () => {
+            try {
+                contentArea.innerHTML = '<div class="flex justify-center items-center h-64"><div class="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div></div>';
+                
+                const response = await fetch('catalog.html');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const htmlText = await response.text();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                
+                const catalogContainer = doc.querySelector('.w-full.max-w-2xl.mx-auto');
+                
+                if (catalogContainer) {
+                    contentArea.innerHTML = catalogContainer.outerHTML;
+                    setupCatalogForm(); 
+                } else {
+                    contentArea.innerHTML = '<p class="text-center text-red-500">No se pudo encontrar el contenido del catálogo.</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar el contenido de catalog.html:', error);
                 contentArea.innerHTML = '<p class="text-center text-red-500">Hubo un error al cargar el contenido. Por favor, inténtelo de nuevo.</p>';
             }
         };
@@ -619,6 +650,285 @@
                     registrationModal.classList.add('hidden');
                 }, 300);
             };
+        };
+
+        // --- Funcionalidad del formulario de catálogo (ahora se llama después de cargar el contenido) ---
+        const setupCatalogForm = () => {
+            // Aquí irá toda la lógica del archivo catalog.html
+            // Inicializar las variables y agregar los event listeners
+            
+            const productSelectionForm = document.getElementById('productSelectionForm');
+            if (!productSelectionForm) return;
+
+            const productTypeSelect = document.getElementById('product-type-select');
+            const hasSugarCheckbox = document.getElementById('has-sugar-checkbox');
+            const flavorSelect = document.getElementById('flavor-select');
+            const flavorInfo = document.getElementById('flavor-info');
+            const quantityInput = document.getElementById('quantity-input');
+            const addToCartButton = document.getElementById('add-to-cart-button');
+            const cartMessageContainer = document.getElementById('cart-message-container');
+            const cartTableBody = document.getElementById('cart-table-body');
+            const cartTotalCostElement = document.getElementById('cart-total-cost');
+            const cartTotalQuantityElement = document.getElementById('cart-total-quantity');
+            const registrationModal = document.getElementById('registration-modal');
+            const modalTitleElement = document.getElementById('modal-title');
+            const modalMessageElement = document.getElementById('modal-message');
+            const modalContentDetails = document.getElementById('modal-content-details');
+
+            let cartItems = [];
+
+            // --- DATOS MOCK DEL CATÁLOGO DE PRODUCTOS (se define aquí para esta vista) ---
+            const baseProductTypes = [
+                { name: 'Yogurt Batido', sizes: ['7 Oz', '23 Oz', '20 L'], baseCost: { '7 Oz': 1, '23 Oz': 3.5, '20 L': 70 }, moneda: 'USD', tienda: 'Tienda A' },
+                { name: 'Yogurt Griego Natural', sizes: ['7 Oz', '23 Oz', '20 Kg'], baseCost: { '7 Oz': 1.25, '23 Oz': 4, '20 Kg': 100 }, moneda: 'USD', tienda: 'Tienda A' },
+                { name: 'Yogurt Griego con Frutas', sizes: ['7 Oz', '23 Oz'], baseCost: { '7 Oz': 1.5, '23 Oz': 4.5 }, moneda: 'USD', tienda: 'Tienda A' },
+                { name: 'Yogurt Líquido', sizes: ['900 ml'], baseCost: { '900 ml': 4.5 }, moneda: 'USD', tienda: 'Tienda A' },
+            ];
+
+            const allFlavors = [
+                'Fresa', 'Mora', 'Piña', 'Parchita', 'Ciruela', 'Guanábana', 'Durazno', 'Dulce', 'Natural', 'Otro'
+            ];
+
+            const generateProductCatalog = () => {
+                let id = 101;
+                const catalog = [];
+                baseProductTypes.forEach(productType => {
+                    productType.sizes.forEach(size => {
+                        let applicableFlavors = allFlavors;
+                        if (productType.name === 'Yogurt Griego Natural') {
+                            applicableFlavors = ['Natural'];
+                        }
+                        const sugarOptions = [true, false];
+                        sugarOptions.forEach(hasSugar => {
+                            applicableFlavors.forEach(flavor => {
+                                const description = `${productType.name} ${size}`;
+                                const presentation = `${hasSugar ? 'C/Azúcar' : 'S/Azúcar'}, Sabor: ${flavor}`;
+                                const cost = productType.baseCost[size];
+                                catalog.push({
+                                    Plan_Cat_ID: id++,
+                                    Plan_Cat_Descripción: description,
+                                    Plan_Cat_Presentación: presentation,
+                                    Plan_Cat_Costo: cost,
+                                    Plan_Cat_Moneda: productType.moneda,
+                                    Plan_Cat_Tienda: "Y42X"
+                                });
+                            });
+                        });
+                    });
+                });
+                return catalog;
+            };
+
+            const mockPlanesCat = generateProductCatalog();
+
+            // Lógica para poblar el dropdown de Tipo de Producto
+            const populateProductTypes = () => {
+                const uniqueBaseDescriptions = [...new Set(mockPlanesCat.map(p => p.Plan_Cat_Descripción))];
+                productTypeSelect.innerHTML = '<option value="">Selecciona producto</option>';
+                uniqueBaseDescriptions.forEach(desc => {
+                    const option = document.createElement('option');
+                    option.value = desc;
+                    option.textContent = desc;
+                    productTypeSelect.appendChild(option);
+                });
+            };
+
+            // Lógica para poblar el dropdown de Sabor basado en el producto seleccionado
+            const populateFlavors = () => {
+                const selectedProductType = productTypeSelect.value;
+                const isYogurtGriegoNatural = selectedProductType === 'Yogurt Griego Natural 7 Oz' || selectedProductType === 'Yogurt Griego Natural 23 Oz' || selectedProductType === 'Yogurt Griego Natural 20 Kg';
+                
+                flavorSelect.innerHTML = '<option value="">Selecciona sabor</option>';
+                flavorSelect.disabled = isYogurtGriegoNatural;
+                
+                if (isYogurtGriegoNatural) {
+                    flavorInfo.classList.remove('hidden');
+                } else {
+                    flavorInfo.classList.add('hidden');
+                    allFlavors.forEach(flavor => {
+                        const option = document.createElement('option');
+                        option.value = flavor;
+                        option.textContent = flavor;
+                        flavorSelect.appendChild(option);
+                    });
+                }
+            };
+            
+            // Lógica para renderizar la tabla del carrito
+            const renderCartTable = () => {
+                cartTableBody.innerHTML = '';
+                let totalCost = 0;
+                let totalQuantity = 0;
+                
+                cartItems.forEach((item, index) => {
+                    totalCost += item.cost * item.quantity;
+                    totalQuantity += item.quantity;
+                    
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-100', 'hover:bg-gray-50', 'transition-colors');
+                    row.innerHTML = `
+                        <td class="py-2 px-3 text-left text-sm text-gray-700">${index + 1}</td>
+                        <td class="py-2 px-3 text-center text-sm text-gray-700">${item.description} (${item.presentation})</td>
+                        <td class="py-2 px-3 text-right text-sm text-gray-700">${item.quantity}</td>
+                        <td class="py-2 px-3 text-right text-sm text-gray-700">${(item.cost * item.quantity).toFixed(2)}</td>
+                        <td class="py-2 px-3 text-center">
+                            <button type="button" class="text-red-500 hover:text-red-700" onclick="removeItemFromCart(${index})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    cartTableBody.appendChild(row);
+                });
+                
+                cartTotalCostElement.textContent = totalCost.toFixed(2);
+                cartTotalQuantityElement.textContent = totalQuantity;
+            };
+
+            // Función para añadir productos al carrito
+            const addItemToCart = () => {
+                const productType = productTypeSelect.value;
+                const quantity = parseInt(quantityInput.value, 10);
+                
+                if (!productType || quantity <= 0) {
+                    showMessage('Por favor, selecciona un producto y una cantidad válida.', 'error');
+                    return;
+                }
+                
+                const hasSugar = hasSugarCheckbox.checked;
+                const flavor = flavorSelect.value || 'Natural';
+                
+                const selectedProduct = mockPlanesCat.find(p => 
+                    p.Plan_Cat_Descripción === productType &&
+                    p.Plan_Cat_Presentación.includes(hasSugar ? 'C/Azúcar' : 'S/Azúcar') &&
+                    p.Plan_Cat_Presentación.includes(`Sabor: ${flavor}`)
+                );
+                
+                if (!selectedProduct) {
+                    showMessage('Producto no encontrado en el catálogo. Por favor, revisa tus selecciones.', 'error');
+                    return;
+                }
+                
+                const existingItemIndex = cartItems.findIndex(item => 
+                    item.description === productType &&
+                    item.presentation === selectedProduct.Plan_Cat_Presentación
+                );
+                
+                if (existingItemIndex > -1) {
+                    cartItems[existingItemIndex].quantity += quantity;
+                } else {
+                    cartItems.push({
+                        id: selectedProduct.Plan_Cat_ID,
+                        description: selectedProduct.Plan_Cat_Descripción,
+                        presentation: selectedProduct.Plan_Cat_Presentación,
+                        cost: selectedProduct.Plan_Cat_Costo,
+                        quantity: quantity
+                    });
+                }
+                
+                renderCartTable();
+                showMessage('Producto añadido al carrito.', 'success');
+                productSelectionForm.reset();
+                populateProductTypes();
+                populateFlavors();
+            };
+
+            // Función para mostrar mensajes de estado
+            const showMessage = (message, type) => {
+                cartMessageContainer.textContent = message;
+                cartMessageContainer.className = `mt-4 text-center p-3 rounded-lg border ${type === 'success' ? 'message-success' : 'message-error'}`;
+                cartMessageContainer.classList.remove('hidden');
+            };
+
+            // Lógica para manejar el envío del formulario
+            const handleFormSubmission = (event) => {
+                event.preventDefault();
+                
+                if (cartItems.length === 0) {
+                    showMessage('El carrito está vacío. Por favor, añade productos.', 'error');
+                    return;
+                }
+                
+                const orderData = {
+                    Orden_ID: generateShortUUID(),
+                    Orden_FechaHora: formatDateTime(new Date()),
+                    Cliente_ID: loggedInUser.Cliente_ID,
+                    Cliente_Nombre: loggedInUser.Cliente_Nombre,
+                    Productos: cartItems.map(item => ({
+                        id: item.id,
+                        descripcion: `${item.description} (${item.presentation})`,
+                        cantidad: item.quantity,
+                        costo_unitario: item.cost,
+                        costo_total: item.cost * item.quantity
+                    })),
+                    Total_Orden: cartItems.reduce((acc, item) => acc + (item.cost * item.quantity), 0).toFixed(2),
+                    Estado: 'Pendiente'
+                };
+                
+                // Mostrar el modal con los detalles de la orden
+                modalTitleElement.textContent = '¡Orden Registrada!';
+                modalMessageElement.textContent = 'Tu orden ha sido registrada con los siguientes detalles:';
+                
+                let productDetailsHtml = `
+                    <p><strong>ID de Orden:</strong> ${orderData.Orden_ID}</p>
+                    <p><strong>Cliente:</strong> ${orderData.Cliente_Nombre}</p>
+                    <p><strong>Fecha:</strong> ${orderData.Orden_FechaHora}</p>
+                    <h4 class="font-bold mt-4">Productos:</h4>
+                    <ul>
+                `;
+                orderData.Productos.forEach(p => {
+                    productDetailsHtml += `<li>- ${p.descripcion} (Cantidad: ${p.cantidad})</li>`;
+                });
+                productDetailsHtml += `
+                    </ul>
+                    <p class="font-bold mt-4">Total: $${orderData.Total_Orden}</p>
+                `;
+                modalContentDetails.innerHTML = productDetailsHtml;
+                
+                registrationModal.classList.remove('hidden');
+                setTimeout(() => {
+                    registrationModal.querySelector('.modal-content').classList.add('show');
+                }, 50);
+
+                // Limpiar el carrito y el formulario
+                cartItems = [];
+                renderCartTable();
+                productSelectionForm.reset();
+                populateProductTypes();
+                populateFlavors();
+                cartMessageContainer.classList.add('hidden');
+            };
+
+            // Función para generar un UUID corto de 5 caracteres alfanuméricos para Orden_ID
+            function generateShortUUID() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ23456789';
+                let result = '';
+                for (let i = 0; i < 5; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+
+            // Función para formatear la fecha y hora a dd/mm/aaaa hh:mm:ss
+            function formatDateTime(date) {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses son 0-indexados
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+            }
+
+            // Event Listeners
+            productTypeSelect.addEventListener('change', populateFlavors);
+            addToCartButton.addEventListener('click', addItemToCart);
+            productSelectionForm.addEventListener('submit', handleFormSubmission);
+            
+            // Funciones iniciales
+            populateProductTypes();
+            populateFlavors();
+            renderCartTable();
+
         };
 
 
