@@ -212,9 +212,11 @@
             ]
         };
 
-        // URL del script de Google Apps
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz1gT9m1cQ6_k9rK3c8_7JgY4M_d5d0J0z0/exec'; // ¡REEMPLAZA ESTO CON TU URL REAL!
+        // --- CONFIGURACIÓN --- ref DRIVE App Registro Datos Taller (script)      
+        // ¡IMPORTANTE! Reemplaza esta URL con la URL de tu Google Apps Script Web App desplegada.
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxdsFH6vUuDO7oe4WwL-b4KcvCcfomByJ5r9PbUwDFKdmXIAmSxeNw2OALMFXDV8wRs1Q/exec'; // ¡Reemplaza con tu URL de Google Apps Script!
 
+            // Elementos del DOM
         // Variables globales
         let loggedInUser = null;
         let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
